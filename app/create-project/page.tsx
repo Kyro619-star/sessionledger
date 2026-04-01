@@ -1,0 +1,138 @@
+import Link from "next/link";
+import type { Metadata } from "next";
+
+import { createProject } from "./actions";
+
+export const metadata: Metadata = {
+  title: "Create a New Project · SessionLedger",
+  description:
+    "Create a song or session project and start documenting collaboration in SessionLedger.",
+};
+
+export default async function CreateProjectPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const params = await searchParams;
+  const error = params.error;
+
+  return (
+    <main className="min-h-screen bg-neutral-100 text-neutral-900">
+      <div className="mx-auto max-w-6xl px-6 py-16">
+        <Link
+          href="/"
+          className="inline-block text-sm font-medium text-neutral-600 transition hover:text-neutral-900"
+        >
+          ← Back to home
+        </Link>
+
+        <div className="mt-10 max-w-2xl">
+          <h1 className="mb-4 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
+            Create a New Project
+          </h1>
+          <p className="text-lg leading-8 text-neutral-600">
+            Start a song or session project to keep contributions, splits, and
+            authorship clear from day one.
+          </p>
+        </div>
+
+        {error ? (
+          <div
+            className="mt-8 max-w-2xl rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
+            role="alert"
+          >
+            {error === "missing-title"
+              ? "Please enter a project title."
+              : error === "save"
+                ? "Could not save the project. Check Supabase keys, RLS policies, and try again."
+                : "Something went wrong. Try again."}
+          </div>
+        ) : null}
+
+        <div className="mt-10 max-w-2xl rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm">
+          <form className="space-y-6" action={createProject}>
+            <div>
+              <label
+                htmlFor="project-title"
+                className="mb-2 block text-sm font-medium text-neutral-700"
+              >
+                Project Title
+              </label>
+              <input
+                id="project-title"
+                name="title"
+                type="text"
+                autoComplete="off"
+                placeholder="e.g. Summer demo sketch"
+                className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-200"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="project-type"
+                className="mb-2 block text-sm font-medium text-neutral-700"
+              >
+                Project Type
+              </label>
+              <select
+                id="project-type"
+                name="type"
+                defaultValue="song"
+                className="w-full appearance-none rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-200"
+              >
+                <option value="song">Song</option>
+                <option value="beat">Beat</option>
+                <option value="demo">Demo</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label
+                htmlFor="description"
+                className="mb-2 block text-sm font-medium text-neutral-700"
+              >
+                Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                rows={5}
+                placeholder="What is this project about?"
+                className="w-full resize-y rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-200"
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="collaborators"
+                className="mb-2 block text-sm font-medium text-neutral-700"
+              >
+                Collaborators
+              </label>
+              <input
+                id="collaborators"
+                name="collaborators"
+                type="text"
+                autoComplete="off"
+                placeholder="Names or emails, separated by commas"
+                className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-200"
+              />
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="submit"
+                className="rounded-full bg-black px-8 py-3 text-sm font-medium text-white transition hover:opacity-80"
+              >
+                Create Project
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+  );
+}
