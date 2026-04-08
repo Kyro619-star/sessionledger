@@ -14,6 +14,16 @@ export type ContributionRow = {
   project_id: string;
   contributor_name: string;
   contribution_type: string;
+  contribution_other: string | null;
   notes: string | null;
   created_at: string;
+};
+
+export type ProjectSplitRow = {
+  id: string;
+  project_id: string;
+  collaborator_name: string;
+  split_percentage: number;
+  created_at: string;
+  updated_at: string;
 };

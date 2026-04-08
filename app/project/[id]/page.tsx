@@ -4,9 +4,13 @@ import { notFound, redirect } from "next/navigation";
 
 import { AddContributionForm } from "@/components/add-contribution-form";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { ContributionRow, ProjectRow } from "@/lib/types/sessionledger";
+import type {
+  ContributionRow,
+  ProjectRow,
+  ProjectSplitRow,
+} from "@/lib/types/sessionledger";
 
-import { addContribution } from "./actions";
+import { addContribution, saveSplits } from "./actions";
 
 async function reviewAndConfirm(formData: FormData) {
   "use server";
@@ -28,7 +32,18 @@ function formatProjectType(value: string) {
 }
 
 function formatContributionType(value: string) {
-  return value === "mix-edits" ? "mix edits" : value;
+  const map: Record<string, string> = {
+    production: "Production / Beat",
+    topline: "Topline / Melody",
+    lyrics: "Lyrics / Songwriting",
+    vocals: "Vocals / Performance",
+    arrangement: "Arrangement",
+    mixing: "Mixing",
+    mastering: "Mastering",
+    "session-instrument": "Session Instrument",
+    other: "Other",
+  };
+  return map[value] ?? value;
 }
 
 export async function generateMetadata({
@@ -81,14 +96,32 @@ export default async function ProjectPage({
 
   const contributions = (contributionsRaw ?? []) as ContributionRow[];
 
-  const collaboratorNames = project.collaborators
-    ? project.collaborators
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
+  const { data: splitsRaw } = await supabase
+    .from("project_splits")
+    .select("*")
+    .eq("project_id", id)
+    .order("collaborator_name", { ascending: true });
+
+  const splits = (splitsRaw ?? []) as ProjectSplitRow[];
+
+  const participants = project.collaborators
+    ? Array.from(
+        new Set(
+          project.collaborators
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+        ),
+      )
     : [];
 
   const isConfirmed = project.status === "confirmed";
+  const splitTotal = splits.reduce(
+    (sum, s) => sum + Number(s.split_percentage ?? 0),
+    0,
+  );
+  const splitTotalRounded = Math.round(splitTotal * 100) / 100;
+  const splitsReady = Math.abs(splitTotalRounded - 100) < 0.001;
 
   return (
     <main className="min-h-screen bg-neutral-100 text-neutral-900">
@@ -126,22 +159,22 @@ export default async function ProjectPage({
                 Contributors
               </h2>
               <span className="text-xs font-medium text-neutral-500">
-                {collaboratorNames.length > 0
-                  ? `${collaboratorNames.length} ${
-                      collaboratorNames.length === 1 ? "person" : "people"
+                {participants.length > 0
+                  ? `${participants.length} ${
+                      participants.length === 1 ? "participant" : "participants"
                     }`
                   : "None listed"}
               </span>
             </div>
             <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
-              {collaboratorNames.length === 0 ? (
+              {participants.length === 0 ? (
                 <p className="px-6 py-8 text-sm text-neutral-600">
                   No collaborators were added on the create form. You can edit
                   the project later when you add an update flow.
                 </p>
               ) : (
                 <ul className="divide-y divide-neutral-100">
-                  {collaboratorNames.map((name) => (
+                  {participants.map((name) => (
                     <li
                       key={name}
                       className="flex items-start gap-4 px-5 py-4 sm:px-6"
@@ -185,6 +218,13 @@ export default async function ProjectPage({
                         <span className="font-normal text-neutral-500">·</span>{" "}
                         <span className="text-neutral-700">
                           {formatContributionType(c.contribution_type)}
+                          {c.contribution_type === "other" &&
+                          c.contribution_other ? (
+                            <span className="text-neutral-500">
+                              {" "}
+                              ({c.contribution_other})
+                            </span>
+                          ) : null}
                         </span>
                       </p>
                       {c.notes ? (
@@ -206,6 +246,7 @@ export default async function ProjectPage({
             <AddContributionForm
               projectId={id}
               addContributionAction={addContribution}
+              participants={participants}
             />
           </section>
 
@@ -214,17 +255,92 @@ export default async function ProjectPage({
               <h2 className="text-lg font-semibold tracking-tight">
                 Credits and splits
               </h2>
+              <span className="text-xs font-medium text-neutral-500">
+                Total {splitTotalRounded}%
+              </span>
             </div>
             <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
-              <p className="text-sm leading-relaxed text-neutral-600">
-                Credits and split percentages are supporting details. The core
-                artifact is the{" "}
-                <span className="font-medium text-neutral-800">
-                  verified, co-signed record
-                </span>
-                . Splits aren’t stored in the database yet; you can add a
-                dedicated table in the next iteration.
-              </p>
+              {participants.length === 0 ? (
+                <p className="text-sm leading-relaxed text-neutral-600">
+                  Add collaborators first to assign split percentages.
+                </p>
+              ) : (
+                <form action={saveSplits} className="space-y-5">
+                  <input type="hidden" name="projectId" value={id} />
+                  <input
+                    type="hidden"
+                    name="count"
+                    value={participants.length}
+                  />
+
+                  <div className="grid gap-4">
+                    {participants.map((name, i) => {
+                      const existing = splits.find(
+                        (s) => s.collaborator_name === name,
+                      );
+                      return (
+                        <div
+                          key={name}
+                          className="flex items-center justify-between gap-4 rounded-xl border border-neutral-200 bg-white px-4 py-3"
+                        >
+                          <input
+                            type="hidden"
+                            name={`collaborator_${i}`}
+                            value={name}
+                          />
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-neutral-900">
+                              {name}
+                            </p>
+                            <p className="mt-0.5 text-xs text-neutral-500">
+                              Split percentage
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <input
+                              name={`percent_${i}`}
+                              type="number"
+                              inputMode="decimal"
+                              step="0.01"
+                              min={0}
+                              max={100}
+                              defaultValue={
+                                typeof existing?.split_percentage === "number"
+                                  ? String(existing.split_percentage)
+                                  : ""
+                              }
+                              className="w-28 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-200"
+                              placeholder="0"
+                            />
+                            <span className="text-sm text-neutral-500">%</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {!splitsReady ? (
+                    <p className="text-sm text-neutral-600">
+                      Splits must total{" "}
+                      <span className="font-medium text-neutral-900">100%</span>{" "}
+                      before you can review and confirm.
+                    </p>
+                  ) : (
+                    <p className="text-sm text-neutral-600">
+                      Splits total 100%. You’re ready to review the record.
+                    </p>
+                  )}
+
+                  <div className="pt-1">
+                    <button
+                      type="submit"
+                      className="rounded-full border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-100"
+                    >
+                      Save splits
+                    </button>
+                  </div>
+                </form>
+              )}
             </div>
           </section>
 
@@ -244,14 +360,14 @@ export default async function ProjectPage({
             ) : (
               <>
                 <p className="mb-6 text-sm text-neutral-600">
-                  When contributions look right, continue to review and confirm
-                  the record.
+                  Review and sign the record when splits total 100%.
                 </p>
                 <form action={reviewAndConfirm}>
                   <input type="hidden" name="projectId" value={id} />
                   <button
                     type="submit"
-                    className="rounded-full bg-black px-10 py-3 text-sm font-medium text-white transition hover:opacity-80"
+                    disabled={!splitsReady}
+                    className="rounded-full bg-black px-10 py-3 text-sm font-medium text-white transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Review and Confirm
                   </button>

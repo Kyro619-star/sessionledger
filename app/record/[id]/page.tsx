@@ -3,12 +3,27 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { ContributionRow, ProjectRow } from "@/lib/types/sessionledger";
+import type {
+  ContributionRow,
+  ProjectRow,
+  ProjectSplitRow,
+} from "@/lib/types/sessionledger";
 
 import { CopyRecordLinkButton } from "./copy-record-link";
 
 function formatContributionType(value: string) {
-  return value === "mix-edits" ? "mix edits" : value;
+  const map: Record<string, string> = {
+    production: "Production / Beat",
+    topline: "Topline / Melody",
+    lyrics: "Lyrics / Songwriting",
+    vocals: "Vocals / Performance",
+    arrangement: "Arrangement",
+    mixing: "Mixing",
+    mastering: "Mastering",
+    "session-instrument": "Session Instrument",
+    other: "Other",
+  };
+  return map[value] ?? value;
 }
 
 function formatConfirmedAt(iso: string | null | undefined) {
@@ -77,11 +92,28 @@ export default async function FinalRecordPage({
 
   const contributions = (contributionsRaw ?? []) as ContributionRow[];
 
-  const contributorNames = project.collaborators
-    ? project.collaborators
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean)
+  const { data: splitsRaw } = await supabase
+    .from("project_splits")
+    .select("*")
+    .eq("project_id", id)
+    .order("collaborator_name", { ascending: true });
+
+  const splits = (splitsRaw ?? []) as ProjectSplitRow[];
+  const splitTotal = splits.reduce(
+    (sum, s) => sum + Number(s.split_percentage ?? 0),
+    0,
+  );
+  const splitTotalRounded = Math.round(splitTotal * 100) / 100;
+
+  const participants = project.collaborators
+    ? Array.from(
+        new Set(
+          project.collaborators
+            .split(",")
+            .map((s) => s.trim())
+            .filter(Boolean),
+        ),
+      )
     : [];
 
   return (
@@ -99,7 +131,7 @@ export default async function FinalRecordPage({
               Confirmed
             </span>
             <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-700">
-              Co-signed by all collaborators
+              Confirmed project record (prototype)
             </span>
             <span className="text-neutral-500">Confirmed at</span>
             <span className="font-medium tabular-nums text-neutral-900">
@@ -119,8 +151,8 @@ export default async function FinalRecordPage({
                   Contributors
                 </dt>
                 <dd className="mt-1 text-base text-neutral-900">
-                  {contributorNames.length > 0
-                    ? contributorNames.join(", ")
+                  {participants.length > 0
+                    ? participants.join(", ")
                     : "None listed"}
                 </dd>
               </div>
@@ -139,6 +171,13 @@ export default async function FinalRecordPage({
                           <span className="text-neutral-900">
                             {c.contributor_name} —{" "}
                             {formatContributionType(c.contribution_type)}
+                            {c.contribution_type === "other" &&
+                            c.contribution_other ? (
+                              <span className="text-neutral-500">
+                                {" "}
+                                ({c.contribution_other})
+                              </span>
+                            ) : null}
                           </span>
                           {c.notes ? (
                             <span className="mt-1 block text-neutral-600">
@@ -154,15 +193,32 @@ export default async function FinalRecordPage({
 
               <div>
                 <dt className="text-sm font-medium text-neutral-500">
-                  Credits and splits (demo)
+                  Credits and splits
                 </dt>
-                <dd className="mt-1 text-base tabular-nums text-neutral-900">
-                  Kyro 40% · Alex 35% · Maya 25%
-                </dd>
-                <dd className="mt-2 text-xs leading-relaxed text-neutral-500">
-                  Split percentages support verification, but they’re not the
-                  core value — the co-signed record is.
-                </dd>
+                {splits.filter((s) => participants.includes(s.collaborator_name))
+                  .length === 0 ? (
+                  <dd className="mt-1 text-sm text-neutral-600">—</dd>
+                ) : (
+                  <dd className="mt-2 space-y-2">
+                    <div className="text-sm font-medium text-neutral-900">
+                      Total {splitTotalRounded}%
+                    </div>
+                    <ul className="space-y-1.5 text-sm text-neutral-700">
+                      {splits
+                        .filter((s) => participants.includes(s.collaborator_name))
+                        .map((s) => (
+                        <li key={s.id} className="flex justify-between gap-4">
+                          <span className="font-medium text-neutral-900">
+                            {s.collaborator_name}
+                          </span>
+                          <span className="tabular-nums text-neutral-600">
+                            {Number(s.split_percentage)}%
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </dd>
+                )}
               </div>
             </dl>
           </section>

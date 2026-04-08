@@ -11,16 +11,23 @@ type Props = {
   /** When set with addContributionAction, submissions are saved via Server Action. */
   projectId?: string;
   addContributionAction?: (formData: FormData) => Promise<void>;
+  participants?: string[];
 };
 
 export function AddContributionForm({
   projectId,
   addContributionAction,
+  participants,
 }: Props) {
   const persist = Boolean(projectId && addContributionAction);
+  const canChooseParticipant = Boolean(participants && participants.length > 0);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [type, setType] = useState<string>("production");
+  const [participant, setParticipant] = useState<string>(
+    participants?.[0] ?? "",
+  );
 
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
@@ -51,6 +58,8 @@ export function AddContributionForm({
 
           if (!persist) {
             form.reset();
+            setType("production");
+            setParticipant(participants?.[0] ?? "");
             setSuccess(true);
             return;
           }
@@ -62,6 +71,8 @@ export function AddContributionForm({
             try {
               await addContributionAction!(fd);
               form.reset();
+              setType("production");
+              setParticipant(participants?.[0] ?? "");
               setSuccess(true);
             } catch {
               setError(
@@ -72,18 +83,30 @@ export function AddContributionForm({
         }}
       >
         <div>
-          <label htmlFor="contributor-name" className={labelClass}>
-            Contributor Name
+          <label htmlFor="participant" className={labelClass}>
+            Participant
           </label>
-          <input
-            id="contributor-name"
-            name="contributorName"
-            type="text"
-            autoComplete="off"
+          <select
+            id="participant"
+            name="participantName"
+            value={participant}
+            onChange={(e) => setParticipant(e.target.value)}
             required={persist}
-            placeholder="Name as it should appear on the record"
-            className={inputClass}
-          />
+            disabled={persist && !canChooseParticipant}
+            className={`${inputClass} appearance-none disabled:cursor-not-allowed disabled:bg-neutral-50`}
+          >
+            {canChooseParticipant ? (
+              participants!.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))
+            ) : (
+              <option value="">
+                Add collaborators first to select a participant
+              </option>
+            )}
+          </select>
         </div>
 
         <div>
@@ -93,18 +116,39 @@ export function AddContributionForm({
           <select
             id="contribution-type"
             name="contributionType"
-            defaultValue="topline"
+            value={type}
+            onChange={(e) => setType(e.target.value)}
             required={persist}
             className={`${inputClass} appearance-none`}
           >
-            <option value="topline">topline</option>
-            <option value="lyrics">lyrics</option>
-            <option value="production">production</option>
-            <option value="vocals">vocals</option>
-            <option value="arrangement">arrangement</option>
-            <option value="mix-edits">mix edits</option>
+            <option value="production">Production / Beat</option>
+            <option value="topline">Topline / Melody</option>
+            <option value="lyrics">Lyrics / Songwriting</option>
+            <option value="vocals">Vocals / Performance</option>
+            <option value="arrangement">Arrangement</option>
+            <option value="mixing">Mixing</option>
+            <option value="mastering">Mastering</option>
+            <option value="session-instrument">Session Instrument</option>
+            <option value="other">Other</option>
           </select>
         </div>
+
+        {type === "other" ? (
+          <div>
+            <label htmlFor="contribution-other" className={labelClass}>
+              Specify contribution
+            </label>
+            <input
+              id="contribution-other"
+              name="contributionOther"
+              type="text"
+              autoComplete="off"
+              required={persist}
+              placeholder="e.g. Sound design, editing, coaching..."
+              className={inputClass}
+            />
+          </div>
+        ) : null}
 
         <div>
           <label htmlFor="contribution-notes" className={labelClass}>

@@ -140,7 +140,7 @@ export default function ProjectDemoPage() {
             <h2 className="mb-4 text-lg font-semibold tracking-tight">
               Add Contribution
             </h2>
-            <AddContributionForm />
+            <AddContributionForm participants={contributors.map((c) => c.name)} />
           </section>
 
           <section>

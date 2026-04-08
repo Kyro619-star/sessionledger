@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { createProject } from "./actions";
+import { CollaboratorsTagsInput } from "./collaborators-tags";
 
 export const metadata: Metadata = {
   title: "Start a new project record · SessionLedger",
@@ -107,19 +108,11 @@ export default async function CreateProjectPage({
 
             <div>
               <label
-                htmlFor="collaborators"
                 className="mb-2 block text-sm font-medium text-neutral-700"
               >
                 Collaborators
               </label>
-              <input
-                id="collaborators"
-                name="collaborators"
-                type="text"
-                autoComplete="off"
-                placeholder="Names or emails, separated by commas"
-                className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-200"
-              />
+              <CollaboratorsTagsInput />
             </div>
 
             <div className="pt-2">

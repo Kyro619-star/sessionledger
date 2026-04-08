@@ -6,15 +6,18 @@ type Props = {
   confirmed?: boolean;
   projectId: string;
   confirmAction: (formData: FormData) => Promise<void>;
+  canConfirm?: boolean;
 };
 
 export function ConfirmRecordSection({
   confirmed: confirmedProp,
   projectId,
   confirmAction,
+  canConfirm,
 }: Props) {
   const [acknowledged, setAcknowledged] = useState(false);
   const confirmed = Boolean(confirmedProp);
+  const enabled = Boolean(canConfirm ?? true);
 
   if (confirmed) {
     return (
@@ -37,6 +40,17 @@ export function ConfirmRecordSection({
         the project.
       </p>
 
+      {!enabled ? (
+        <div
+          className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-700"
+          role="status"
+          aria-live="polite"
+        >
+          Add splits that total <span className="font-medium">100%</span> to
+          continue.
+        </div>
+      ) : null}
+
       <label className="flex cursor-pointer gap-3 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
         <input
           type="checkbox"
@@ -54,7 +68,7 @@ export function ConfirmRecordSection({
           <input type="hidden" name="projectId" value={projectId} />
           <button
             type="submit"
-            disabled={!acknowledged}
+            disabled={!acknowledged || !enabled}
             className="rounded-full bg-black px-10 py-3 text-sm font-medium text-white transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
           >
             Sign and confirm
