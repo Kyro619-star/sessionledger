@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Review and Confirm · SessionLedger",
   description:
-    "Final review of project summary, contributors, and provisional splits before confirming the record.",
+    "Final review of a co-signed project record before confirmation.",
 };
 
 export default function ConfirmPage() {

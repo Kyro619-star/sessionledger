@@ -10,9 +10,9 @@ async function reviewAndConfirm() {
 }
 
 export const metadata: Metadata = {
-  title: "Midnight Demo Session · SessionLedger",
+  title: "From session to verified record · SessionLedger",
   description:
-    "Sample project detail: contributors, contributions, and provisional splits.",
+    "A quick walkthrough of how a session becomes a co-signed, timestamped verified record.",
 };
 
 const contributors = [
@@ -43,25 +43,74 @@ export default function ProjectDemoPage() {
             <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium uppercase tracking-wider text-neutral-500">
               Song
             </span>
-            <span className="text-xs text-neutral-500">Demo preview</span>
+            <span className="text-xs text-neutral-500">Walkthrough</span>
           </div>
           <h1 className="mb-4 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-            Midnight Demo Session
+            From session to verified record
           </h1>
           <p className="max-w-2xl text-lg leading-8 text-neutral-600">
-            Late-night writing room take — rough mix, shared stems, and a
-            provisional split table everyone can see before things get fuzzy.
+            A simple demo flow showing how independent music collaborators turn
+            a working session into a co-signed record that supports verification
+            and becomes part of a long-term creative profile.
           </p>
         </header>
 
         <div className="mt-12 flex max-w-3xl flex-col gap-10">
+          <section>
+            <h2 className="mb-4 text-lg font-semibold tracking-tight">
+              Demo steps
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-neutral-500">
+                  Step 1
+                </p>
+                <p className="text-sm font-medium text-neutral-900">
+                  Start a project
+                </p>
+              </div>
+              <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-neutral-500">
+                  Step 2
+                </p>
+                <p className="text-sm font-medium text-neutral-900">
+                  Add collaborators and contributions
+                </p>
+              </div>
+              <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-neutral-500">
+                  Step 3
+                </p>
+                <p className="text-sm font-medium text-neutral-900">
+                  Align on credits and splits
+                </p>
+              </div>
+              <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-neutral-500">
+                  Step 4
+                </p>
+                <p className="text-sm font-medium text-neutral-900">
+                  All collaborators confirm the record
+                </p>
+              </div>
+              <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:col-span-2">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-[0.15em] text-neutral-500">
+                  Step 5
+                </p>
+                <p className="text-sm font-medium text-neutral-900">
+                  The confirmed record becomes part of your creative profile
+                </p>
+              </div>
+            </div>
+          </section>
+
           <section>
             <div className="mb-4 flex items-end justify-between gap-4">
               <h2 className="text-lg font-semibold tracking-tight">
                 Contributors
               </h2>
               <span className="text-xs font-medium text-neutral-500">
-                3 people
+                3 collaborators
               </span>
             </div>
             <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
@@ -97,7 +146,7 @@ export default function ProjectDemoPage() {
           <section>
             <div className="mb-4 flex items-end justify-between gap-4">
               <h2 className="text-lg font-semibold tracking-tight">
-                Provisional Splits
+                Credits and splits
               </h2>
               <span className="text-xs font-medium text-neutral-500">
                 Totals 100%
@@ -146,23 +195,23 @@ export default function ProjectDemoPage() {
               </ul>
 
               <p className="mt-6 text-xs leading-relaxed text-neutral-500">
-                Provisional only — not a legal agreement. Confirm when everyone
-                is aligned.
+                Splits support verification, but the co-signed record is the
+                main artifact. Confirm when everyone is aligned.
               </p>
             </div>
           </section>
 
           <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50/80 p-8 text-center">
             <p className="mb-6 text-sm text-neutral-600">
-              When contributions and splits look right, lock in a clear record
-              for this session.
+              When everything looks right, co-sign the same record and create a
+              verified project record.
             </p>
             <form action={reviewAndConfirm}>
               <button
                 type="submit"
                 className="rounded-full bg-black px-10 py-3 text-sm font-medium text-white transition hover:opacity-80"
               >
-                Review and Confirm
+                Review and sign
               </button>
             </form>
           </div>

@@ -212,19 +212,18 @@ export default async function ProjectPage({
           <section>
             <div className="mb-4 flex items-end justify-between gap-4">
               <h2 className="text-lg font-semibold tracking-tight">
-                Provisional Splits
+                Credits and splits
               </h2>
             </div>
             <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
               <p className="text-sm leading-relaxed text-neutral-600">
-                Split percentages are not stored in the database yet—this
-                milestone only includes{" "}
-                <span className="font-medium text-neutral-800">projects</span>{" "}
-                and{" "}
+                Credits and split percentages are supporting details. The core
+                artifact is the{" "}
                 <span className="font-medium text-neutral-800">
-                  contributions
+                  verified, co-signed record
                 </span>
-                . You can add a splits table in the next iteration.
+                . Splits aren’t stored in the database yet; you can add a
+                dedicated table in the next iteration.
               </p>
             </div>
           </section>

@@ -5,6 +5,8 @@ import { notFound, redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { ContributionRow, ProjectRow } from "@/lib/types/sessionledger";
 
+import { CopyRecordLinkButton } from "./copy-record-link";
+
 function formatContributionType(value: string) {
   return value === "mix-edits" ? "mix edits" : value;
 }
@@ -35,12 +37,12 @@ export async function generateMetadata({
       .eq("id", id)
       .maybeSingle();
     if (data?.title) {
-      return { title: `Final record · ${data.title} · SessionLedger` };
+      return { title: `Verified Project Record · ${data.title} · SessionLedger` };
     }
   } catch {
     /* missing env */
   }
-  return { title: "Final record · SessionLedger" };
+  return { title: "Verified Project Record · SessionLedger" };
 }
 
 export default async function FinalRecordPage({
@@ -85,14 +87,9 @@ export default async function FinalRecordPage({
   return (
     <main className="min-h-screen bg-neutral-100 text-neutral-900">
       <div className="mx-auto max-w-6xl px-6 py-16">
-        <div className="mb-10 max-w-2xl rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm font-medium text-neutral-900 shadow-sm">
-          This collaboration record is confirmed. Export and sharing can be
-          added later.
-        </div>
-
         <header className="max-w-2xl border-b border-neutral-200 pb-10">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-neutral-500">
-            Final record
+            Verified Project Record
           </p>
           <h1 className="mb-4 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
             {project.title}
@@ -100,6 +97,9 @@ export default async function FinalRecordPage({
           <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-600">
             <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium uppercase tracking-wider text-neutral-700">
               Confirmed
+            </span>
+            <span className="rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-700">
+              Co-signed by all collaborators
             </span>
             <span className="text-neutral-500">Confirmed at</span>
             <span className="font-medium tabular-nums text-neutral-900">
@@ -154,14 +154,14 @@ export default async function FinalRecordPage({
 
               <div>
                 <dt className="text-sm font-medium text-neutral-500">
-                  Provisional / final splits (demo)
+                  Credits and splits (demo)
                 </dt>
                 <dd className="mt-1 text-base tabular-nums text-neutral-900">
                   Kyro 40% · Alex 35% · Maya 25%
                 </dd>
                 <dd className="mt-2 text-xs leading-relaxed text-neutral-500">
-                  Stored as demo copy for class; you can model real splits in the
-                  database later.
+                  Split percentages support verification, but they’re not the
+                  core value — the co-signed record is.
                 </dd>
               </div>
             </dl>
@@ -176,13 +176,26 @@ export default async function FinalRecordPage({
             >
               Export PDF
             </button>
-            <Link
-              href="/"
-              className="text-center text-sm font-medium text-neutral-700 underline-offset-4 hover:underline sm:text-left"
-            >
-              ← Back to home
-            </Link>
           </div>
+
+          <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-neutral-600">
+                Share this record with collaborators or a future client.
+              </p>
+              <CopyRecordLinkButton />
+            </div>
+            <p className="mt-4 text-xs leading-relaxed text-neutral-500">
+              Blockchain timestamp integration coming soon.
+            </p>
+          </div>
+
+          <Link
+            href="/"
+            className="text-center text-sm font-medium text-neutral-700 underline-offset-4 hover:underline sm:text-left"
+          >
+            ← Back to home
+          </Link>
         </div>
       </div>
     </main>

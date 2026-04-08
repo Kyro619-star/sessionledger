@@ -4,9 +4,9 @@ import type { Metadata } from "next";
 import { createProject } from "./actions";
 
 export const metadata: Metadata = {
-  title: "Create a New Project · SessionLedger",
+  title: "Start a new project record · SessionLedger",
   description:
-    "Create a song or session project and start documenting collaboration in SessionLedger.",
+    "Start a verified project record for independent music collaborators.",
 };
 
 export default async function CreateProjectPage({
@@ -29,11 +29,11 @@ export default async function CreateProjectPage({
 
         <div className="mt-10 max-w-2xl">
           <h1 className="mb-4 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-            Create a New Project
+            Start a new project record
           </h1>
           <p className="text-lg leading-8 text-neutral-600">
-            Start a song or session project to keep contributions, splits, and
-            authorship clear from day one.
+            Start a professional record of what you’re building together — who
+            contributed, what was created, and what everyone confirmed.
           </p>
         </div>
 
@@ -100,7 +100,7 @@ export default async function CreateProjectPage({
                 id="description"
                 name="description"
                 rows={5}
-                placeholder="What is this project about?"
+                placeholder="What are you building together?"
                 className="w-full resize-y rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-200"
               />
             </div>
@@ -127,7 +127,7 @@ export default async function CreateProjectPage({
                 type="submit"
                 className="rounded-full bg-black px-8 py-3 text-sm font-medium text-white transition hover:opacity-80"
               >
-                Create Project
+                Start record
               </button>
             </div>
           </form>

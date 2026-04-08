@@ -75,12 +75,12 @@ export default async function ConfirmProjectPage({
 
         <header className="mt-10 max-w-2xl">
           <h1 className="mb-4 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
-            Review and Confirm
+            Review and sign this record
           </h1>
           <p className="text-lg leading-8 text-neutral-600">
-            Take one last look. Confirming marks this project as{" "}
-            <span className="font-medium text-neutral-800">confirmed</span> and
-            creates a clear record you can refer to later.
+            Take one last look at the roles, credits, and splits. When everyone
+            confirms the same record, it becomes a verified project record that
+            supports verification over time.
           </p>
         </header>
 

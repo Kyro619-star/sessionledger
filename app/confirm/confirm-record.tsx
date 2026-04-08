@@ -32,6 +32,11 @@ export function ConfirmRecordSection({
 
   return (
     <div className="space-y-8">
+      <p className="text-sm leading-relaxed text-neutral-600">
+        By confirming, all collaborators agree this record accurately reflects
+        the project.
+      </p>
+
       <label className="flex cursor-pointer gap-3 rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm">
         <input
           type="checkbox"
@@ -40,9 +45,7 @@ export function ConfirmRecordSection({
           onChange={(e) => setAcknowledged(e.target.checked)}
         />
         <span className="text-sm leading-relaxed text-neutral-700">
-          I acknowledge that this summary reflects our collaboration on this
-          session and that all named contributors have had a chance to review
-          it.
+          I have reviewed the record and I’m ready to co-sign it.
         </span>
       </label>
 
@@ -54,7 +57,7 @@ export function ConfirmRecordSection({
             disabled={!acknowledged}
             className="rounded-full bg-black px-10 py-3 text-sm font-medium text-white transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
           >
-            Confirm Record
+            Sign and confirm
           </button>
         </form>
       </div>
