@@ -19,7 +19,7 @@ export function InviteSection({ projectId, participants, existingInvites }: Prop
         .map((i) => [i.collaborator_name, i.token])
     )
   );
-  const [confirmed] = useState<Set<string>>(
+  const [confirmedNames, setConfirmedNames] = useState<Set<string>>(
     () => new Set(existingInvites.filter((i) => i.status === "confirmed").map((i) => i.collaborator_name))
   );
   const [copied, setCopied] = useState<string | null>(null);
@@ -53,26 +53,38 @@ export function InviteSection({ projectId, participants, existingInvites }: Prop
       setCopied(name);
       setTimeout(() => setCopied(null), 2000);
     } catch {
-      // fallback: select the text
+      // fallback
     }
   }
 
   if (participants.length === 0) return null;
 
+  const confirmedCount = confirmedNames.size;
+  const totalCount = participants.length;
+
   return (
     <section>
-      <h2 className="mb-1 text-lg font-semibold tracking-tight">
-        Invite collaborators to co-sign
-      </h2>
-      <p className="mb-6 text-sm leading-relaxed text-neutral-500">
-        Generate a unique link for each collaborator. Send it to them directly — they open it, review the record, and confirm.
+      <div className="mb-1 flex items-center justify-between gap-4">
+        <h2 className="text-lg font-semibold tracking-tight">
+          Collaborator co-signatures
+        </h2>
+        <span className={`text-xs font-medium ${confirmedCount === totalCount ? "text-emerald-600" : "text-neutral-500"}`}>
+          {confirmedCount} / {totalCount} signed
+        </span>
+      </div>
+      <p className="mb-2 text-sm leading-relaxed text-neutral-500">
+        Each collaborator needs to co-sign before you can confirm the final record.
+        Generate a unique link for each person and send it to them directly.
+      </p>
+      <p className="mb-6 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
+        💡 <strong>You don't need to invite yourself.</strong> Your signature comes from clicking "Review and Confirm" at the bottom of this page.
       </p>
 
       <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
         <ul className="divide-y divide-neutral-100">
           {participants.map((name) => {
             const token = invites[name];
-            const isConfirmed = confirmed.has(name);
+            const isConfirmed = confirmedNames.has(name);
             const isGenerating = generating === name && isPending;
 
             return (
@@ -87,10 +99,10 @@ export function InviteSection({ projectId, participants, existingInvites }: Prop
                       <p className="text-xs font-medium text-emerald-600">✓ Co-signed</p>
                     )}
                     {!isConfirmed && token && (
-                      <p className="text-xs text-neutral-400">Link ready — send to {name}</p>
+                      <p className="text-xs text-neutral-400">Link sent — waiting for confirmation</p>
                     )}
                     {!isConfirmed && !token && (
-                      <p className="text-xs text-neutral-400">No invite yet</p>
+                      <p className="text-xs text-neutral-400">No invite generated yet</p>
                     )}
                   </div>
                 </div>
@@ -98,7 +110,7 @@ export function InviteSection({ projectId, participants, existingInvites }: Prop
                 <div className="flex items-center gap-2 pl-12 sm:pl-0">
                   {isConfirmed ? (
                     <span className="rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-medium text-emerald-700">
-                      Confirmed
+                      ✓ Confirmed
                     </span>
                   ) : token ? (
                     <>
@@ -106,12 +118,12 @@ export function InviteSection({ projectId, participants, existingInvites }: Prop
                         onClick={() => handleCopy(name, token)}
                         className="rounded-full border border-neutral-200 bg-white px-3 py-1.5 text-xs font-medium text-neutral-700 transition hover:bg-neutral-50"
                       >
-                        {copied === name ? "Copied!" : "Copy link"}
+                        {copied === name ? "✓ Copied!" : "Copy link"}
                       </button>
                       <button
                         onClick={() => handleGenerate(name)}
                         disabled={isGenerating}
-                        className="rounded-full px-3 py-1.5 text-xs font-medium text-neutral-500 transition hover:text-neutral-900 disabled:opacity-40"
+                        className="rounded-full px-3 py-1.5 text-xs font-medium text-neutral-400 transition hover:text-neutral-700 disabled:opacity-40"
                       >
                         Regenerate
                       </button>
