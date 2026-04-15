@@ -99,11 +99,18 @@ export default async function FinalRecordPage({
     .order("collaborator_name", { ascending: true });
 
   const splits = (splitsRaw ?? []) as ProjectSplitRow[];
-  const splitTotal = splits.reduce(
-    (sum, s) => sum + Number(s.split_percentage ?? 0),
+
+  const compTotal = splits.reduce(
+    (sum, s) => sum + Number(s.composition_split ?? 0),
     0,
   );
-  const splitTotalRounded = Math.round(splitTotal * 100) / 100;
+  const compTotalRounded = Math.round(compTotal * 100) / 100;
+
+  const masterTotal = splits.reduce(
+    (sum, s) => sum + Number(s.master_split ?? 0),
+    0,
+  );
+  const masterTotalRounded = Math.round(masterTotal * 100) / 100;
 
   const participants = project.collaborators
     ? Array.from(
@@ -199,24 +206,80 @@ export default async function FinalRecordPage({
                   .length === 0 ? (
                   <dd className="mt-1 text-sm text-neutral-600">—</dd>
                 ) : (
-                  <dd className="mt-2 space-y-2">
-                    <div className="text-sm font-medium text-neutral-900">
-                      Total {splitTotalRounded}%
+                  <dd className="mt-3 space-y-5">
+
+                    {/* (c) Composition / Publishing */}
+                    <div>
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="rounded-md bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700">
+                          (c)
+                        </span>
+                        <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                          Composition / Publishing
+                        </span>
+                        <span className="ml-auto text-xs tabular-nums text-neutral-400">
+                          {compTotalRounded}% total
+                        </span>
+                      </div>
+                      <ul className="divide-y divide-neutral-100 rounded-xl border border-neutral-100 bg-neutral-50 text-sm">
+                        {splits
+                          .filter((s) => participants.includes(s.collaborator_name))
+                          .map((s) => (
+                          <li
+                            key={`c-${s.id}`}
+                            className="flex items-center justify-between gap-4 px-4 py-2.5"
+                          >
+                            <span className="font-medium text-neutral-900">
+                              {s.collaborator_name}
+                            </span>
+                            <span className="tabular-nums text-neutral-600">
+                              {Number(s.composition_split ?? 0)}%
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-1.5 text-xs text-neutral-400">
+                        Covers PRO income (ASCAP / BMI), mechanicals, and
+                        publishing sync fees.
+                      </p>
                     </div>
-                    <ul className="space-y-1.5 text-sm text-neutral-700">
-                      {splits
-                        .filter((s) => participants.includes(s.collaborator_name))
-                        .map((s) => (
-                        <li key={s.id} className="flex justify-between gap-4">
-                          <span className="font-medium text-neutral-900">
-                            {s.collaborator_name}
-                          </span>
-                          <span className="tabular-nums text-neutral-600">
-                            {Number(s.split_percentage)}%
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
+
+                    {/* (p) Master / Sound Recording */}
+                    <div>
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className="rounded-md bg-sky-100 px-2 py-0.5 text-xs font-semibold text-sky-700">
+                          (p)
+                        </span>
+                        <span className="text-xs font-semibold uppercase tracking-wide text-neutral-500">
+                          Master / Sound Recording
+                        </span>
+                        <span className="ml-auto text-xs tabular-nums text-neutral-400">
+                          {masterTotalRounded}% total
+                        </span>
+                      </div>
+                      <ul className="divide-y divide-neutral-100 rounded-xl border border-neutral-100 bg-neutral-50 text-sm">
+                        {splits
+                          .filter((s) => participants.includes(s.collaborator_name))
+                          .map((s) => (
+                          <li
+                            key={`p-${s.id}`}
+                            className="flex items-center justify-between gap-4 px-4 py-2.5"
+                          >
+                            <span className="font-medium text-neutral-900">
+                              {s.collaborator_name}
+                            </span>
+                            <span className="tabular-nums text-neutral-600">
+                              {Number(s.master_split ?? 0)}%
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-1.5 text-xs text-neutral-400">
+                        Covers streaming revenue, master-use sync fees, and
+                        label or distributor agreements.
+                      </p>
+                    </div>
+
                   </dd>
                 )}
               </div>

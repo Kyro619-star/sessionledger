@@ -116,12 +116,25 @@ export default async function ProjectPage({
     : [];
 
   const isConfirmed = project.status === "confirmed";
-  const splitTotal = splits.reduce(
-    (sum, s) => sum + Number(s.split_percentage ?? 0),
+
+  // (c) Composition / Publishing — who wrote the song
+  const compTotal = splits.reduce(
+    (sum, s) => sum + Number(s.composition_split ?? 0),
     0,
   );
-  const splitTotalRounded = Math.round(splitTotal * 100) / 100;
-  const splitsReady = Math.abs(splitTotalRounded - 100) < 0.001;
+  const compTotalRounded = Math.round(compTotal * 100) / 100;
+  const compReady = Math.abs(compTotalRounded - 100) < 0.001;
+
+  // (p) Master / Sound Recording — who owns the recording
+  const masterTotal = splits.reduce(
+    (sum, s) => sum + Number(s.master_split ?? 0),
+    0,
+  );
+  const masterTotalRounded = Math.round(masterTotal * 100) / 100;
+  const masterReady = Math.abs(masterTotalRounded - 100) < 0.001;
+
+  // Both tracks must total 100% before the record can be confirmed
+  const splitsReady = compReady && masterReady;
 
   return (
     <main className="min-h-screen bg-neutral-100 text-neutral-900">
@@ -251,29 +264,50 @@ export default async function ProjectPage({
           </section>
 
           <section>
-            <div className="mb-4 flex items-end justify-between gap-4">
-              <h2 className="text-lg font-semibold tracking-tight">
-                Credits and splits
-              </h2>
-              <span className="text-xs font-medium text-neutral-500">
-                Total {splitTotalRounded}%
-              </span>
-            </div>
-            <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
-              {participants.length === 0 ? (
+            <h2 className="mb-1 text-lg font-semibold tracking-tight">
+              Credits and splits
+            </h2>
+            <p className="mb-6 text-sm leading-relaxed text-neutral-500">
+              Music copyright has two distinct ownership tracks. Set each
+              independently — they don&apos;t have to match.
+            </p>
+
+            {participants.length === 0 ? (
+              <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
                 <p className="text-sm leading-relaxed text-neutral-600">
                   Add collaborators first to assign split percentages.
                 </p>
-              ) : (
-                <form action={saveSplits} className="space-y-5">
-                  <input type="hidden" name="projectId" value={id} />
+              </div>
+            ) : (
+              <form action={saveSplits} className="space-y-8">
+                <input type="hidden" name="projectId" value={id} />
+                <input type="hidden" name="count" value={participants.length} />
+                {participants.map((name, i) => (
                   <input
+                    key={name}
                     type="hidden"
-                    name="count"
-                    value={participants.length}
+                    name={`collaborator_${i}`}
+                    value={name}
                   />
+                ))}
 
-                  <div className="grid gap-4">
+                {/* ── (c) Composition / Publishing ── */}
+                <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="rounded-md bg-violet-100 px-2 py-0.5 text-xs font-semibold tracking-wide text-violet-700">
+                      (c)
+                    </span>
+                    <h3 className="text-base font-semibold text-neutral-900">
+                      Composition / Publishing
+                    </h3>
+                  </div>
+                  <p className="mb-5 text-xs leading-relaxed text-neutral-500">
+                    Covers the underlying song — melody and lyrics. Generates
+                    PRO income (ASCAP / BMI), mechanical royalties, and the
+                    publishing portion of sync licensing fees.
+                  </p>
+
+                  <div className="grid gap-3">
                     {participants.map((name, i) => {
                       const existing = splits.find(
                         (s) => s.collaborator_name === name,
@@ -281,35 +315,25 @@ export default async function ProjectPage({
                       return (
                         <div
                           key={name}
-                          className="flex items-center justify-between gap-4 rounded-xl border border-neutral-200 bg-white px-4 py-3"
+                          className="flex items-center justify-between gap-4 rounded-xl border border-neutral-100 bg-neutral-50 px-4 py-3"
                         >
-                          <input
-                            type="hidden"
-                            name={`collaborator_${i}`}
-                            value={name}
-                          />
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-neutral-900">
-                              {name}
-                            </p>
-                            <p className="mt-0.5 text-xs text-neutral-500">
-                              Split percentage
-                            </p>
-                          </div>
+                          <p className="text-sm font-medium text-neutral-900">
+                            {name}
+                          </p>
                           <div className="flex items-center gap-2">
                             <input
-                              name={`percent_${i}`}
+                              name={`comp_${i}`}
                               type="number"
                               inputMode="decimal"
                               step="0.01"
                               min={0}
                               max={100}
                               defaultValue={
-                                typeof existing?.split_percentage === "number"
-                                  ? String(existing.split_percentage)
+                                typeof existing?.composition_split === "number"
+                                  ? String(existing.composition_split)
                                   : ""
                               }
-                              className="w-28 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-200"
+                              className="w-24 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-violet-400 focus:outline-none focus:ring-2 focus:ring-violet-100"
                               placeholder="0"
                             />
                             <span className="text-sm text-neutral-500">%</span>
@@ -319,29 +343,115 @@ export default async function ProjectPage({
                     })}
                   </div>
 
-                  {!splitsReady ? (
-                    <p className="text-sm text-neutral-600">
-                      Splits must total{" "}
-                      <span className="font-medium text-neutral-900">100%</span>{" "}
-                      before you can review and confirm.
-                    </p>
-                  ) : (
-                    <p className="text-sm text-neutral-600">
-                      Splits total 100%. You’re ready to review the record.
-                    </p>
-                  )}
-
-                  <div className="pt-1">
-                    <button
-                      type="submit"
-                      className="rounded-full border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-100"
+                  <div className="mt-4 flex items-center justify-between">
+                    <p
+                      className={`text-xs font-medium ${
+                        compReady
+                          ? "text-emerald-600"
+                          : compTotalRounded > 0
+                            ? "text-amber-600"
+                            : "text-neutral-400"
+                      }`}
                     >
-                      Save splits
-                    </button>
+                      {compReady
+                        ? "✓ Totals 100%"
+                        : `Total: ${compTotalRounded}% — must reach 100%`}
+                    </p>
                   </div>
-                </form>
-              )}
-            </div>
+                </div>
+
+                {/* ── (p) Master / Sound Recording ── */}
+                <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm sm:p-8">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className="rounded-md bg-sky-100 px-2 py-0.5 text-xs font-semibold tracking-wide text-sky-700">
+                      (p)
+                    </span>
+                    <h3 className="text-base font-semibold text-neutral-900">
+                      Master / Sound Recording
+                    </h3>
+                  </div>
+                  <p className="mb-5 text-xs leading-relaxed text-neutral-500">
+                    Covers the specific recorded performance. Generates
+                    streaming revenue, master-use fees in sync deals, and is
+                    the asset typically signed to a label or distributor.
+                  </p>
+
+                  <div className="grid gap-3">
+                    {participants.map((name, i) => {
+                      const existing = splits.find(
+                        (s) => s.collaborator_name === name,
+                      );
+                      return (
+                        <div
+                          key={name}
+                          className="flex items-center justify-between gap-4 rounded-xl border border-neutral-100 bg-neutral-50 px-4 py-3"
+                        >
+                          <p className="text-sm font-medium text-neutral-900">
+                            {name}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            <input
+                              name={`master_${i}`}
+                              type="number"
+                              inputMode="decimal"
+                              step="0.01"
+                              min={0}
+                              max={100}
+                              defaultValue={
+                                typeof existing?.master_split === "number"
+                                  ? String(existing.master_split)
+                                  : ""
+                              }
+                              className="w-24 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-100"
+                              placeholder="0"
+                            />
+                            <span className="text-sm text-neutral-500">%</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 flex items-center justify-between">
+                    <p
+                      className={`text-xs font-medium ${
+                        masterReady
+                          ? "text-emerald-600"
+                          : masterTotalRounded > 0
+                            ? "text-amber-600"
+                            : "text-neutral-400"
+                      }`}
+                    >
+                      {masterReady
+                        ? "✓ Totals 100%"
+                        : `Total: ${masterTotalRounded}% — must reach 100%`}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Status + save */}
+                {!splitsReady && (compTotalRounded > 0 || masterTotalRounded > 0) ? (
+                  <p className="text-sm text-neutral-600">
+                    Both (c) and (p) tracks must each total{" "}
+                    <span className="font-medium text-neutral-900">100%</span>{" "}
+                    before you can confirm this record.
+                  </p>
+                ) : splitsReady ? (
+                  <p className="text-sm text-emerald-700">
+                    Both tracks total 100%. You’re ready to review and confirm.
+                  </p>
+                ) : null}
+
+                <div className="pt-1">
+                  <button
+                    type="submit"
+                    className="rounded-full border border-neutral-200 bg-white px-6 py-3 text-sm font-medium text-neutral-900 transition hover:bg-neutral-100"
+                  >
+                    Save splits
+                  </button>
+                </div>
+              </form>
+            )}
           </section>
 
           <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50/80 p-8 text-center">

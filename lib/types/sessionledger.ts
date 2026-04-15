@@ -23,7 +23,12 @@ export type ProjectSplitRow = {
   id: string;
   project_id: string;
   collaborator_name: string;
+  /** @deprecated Legacy single-percentage field. Use composition_split and master_split. */
   split_percentage: number;
+  /** (c) Publishing / composition share — must total 100 across all collaborators. */
+  composition_split: number;
+  /** (p) Master / sound-recording share — must total 100 across all collaborators. */
+  master_split: number;
   created_at: string;
   updated_at: string;
 };

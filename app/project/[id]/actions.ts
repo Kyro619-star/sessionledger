@@ -81,27 +81,40 @@ export async function saveSplits(formData: FormData) {
   const participants = await getCanonicalParticipants(supabase, projectId);
   const participantSet = new Set(participants);
 
-  const splitMap = new Map<string, number>();
+  type SplitEntry = {
+    collaborator_name: string;
+    composition_split: number;
+    master_split: number;
+  };
+
+  const splitMap = new Map<string, SplitEntry>();
+
   for (let i = 0; i < count; i += 1) {
     const name = String(formData.get(`collaborator_${i}`) ?? "").trim();
-    const percentRaw = String(formData.get(`percent_${i}`) ?? "").trim();
-    if (!name) continue;
-    if (!participantSet.has(name)) continue;
-    const percent = Number(percentRaw);
-    if (!Number.isFinite(percent)) continue;
-    splitMap.set(name, percent);
+    if (!name || !participantSet.has(name)) continue;
+
+    const compRaw = String(formData.get(`comp_${i}`) ?? "").trim();
+    const masterRaw = String(formData.get(`master_${i}`) ?? "").trim();
+
+    const comp = Number(compRaw);
+    const master = Number(masterRaw);
+
+    splitMap.set(name, {
+      collaborator_name: name,
+      composition_split: Number.isFinite(comp) ? comp : 0,
+      master_split: Number.isFinite(master) ? master : 0,
+    });
   }
 
-  const splits = Array.from(splitMap.entries()).map(
-    ([collaborator_name, percent]) => ({
-      collaborator_name,
-      split_percentage: percent,
-    }),
-  );
+  const splits = Array.from(splitMap.values());
 
-  const total = splits.reduce((sum, s) => sum + s.split_percentage, 0);
-  const rounded = Math.round(total * 100) / 100;
-  const isValidTotal = Math.abs(rounded - 100) < 0.001;
+  const compTotal = splits.reduce((sum, s) => sum + s.composition_split, 0);
+  const masterTotal = splits.reduce((sum, s) => sum + s.master_split, 0);
+  const compRounded = Math.round(compTotal * 100) / 100;
+  const masterRounded = Math.round(masterTotal * 100) / 100;
+  const isValidTotal =
+    Math.abs(compRounded - 100) < 0.001 &&
+    Math.abs(masterRounded - 100) < 0.001;
 
   const { error: deleteError } = await supabase
     .from("project_splits")
@@ -109,13 +122,7 @@ export async function saveSplits(formData: FormData) {
     .eq("project_id", projectId);
 
   if (deleteError) {
-    console.error("saveSplits delete error", {
-      message: deleteError.message,
-      details: deleteError.details,
-      hint: deleteError.hint,
-      code: deleteError.code,
-    });
-    console.error("saveSplits delete full error", deleteError);
+    console.error("saveSplits delete error", deleteError);
     throw new Error("Could not reset splits");
   }
 
@@ -124,27 +131,21 @@ export async function saveSplits(formData: FormData) {
       splits.map((s) => ({
         project_id: projectId,
         collaborator_name: s.collaborator_name,
-        split_percentage: s.split_percentage,
+        composition_split: s.composition_split,
+        master_split: s.master_split,
       })),
     );
 
     if (insertError) {
-      console.error("saveSplits insert error", {
-        message: insertError.message,
-        details: insertError.details,
-        hint: insertError.hint,
-        code: insertError.code,
-      });
-      console.error("saveSplits insert full error", insertError);
+      console.error("saveSplits insert error", insertError);
       throw new Error("Could not save splits");
     }
   }
 
   revalidatePath(`/project/${projectId}`);
 
+  // Save regardless of total — the UI shows whether both tracks hit 100%.
   if (!isValidTotal) {
-    // Save anyway, but inform the user they can't confirm yet.
-    // Keeping it simple: return control to the page (no redirect) and let UI show totals.
     return;
   }
 }
