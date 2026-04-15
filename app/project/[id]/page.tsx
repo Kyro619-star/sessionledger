@@ -6,11 +6,13 @@ import { AddContributionForm } from "@/components/add-contribution-form";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type {
   ContributionRow,
+  CosignInviteRow,
   ProjectRow,
   ProjectSplitRow,
 } from "@/lib/types/sessionledger";
 
 import { addContribution, saveSplits } from "./actions";
+import { InviteSection } from "./invite-section";
 
 async function reviewAndConfirm(formData: FormData) {
   "use server";
@@ -75,6 +77,7 @@ export default async function ProjectPage({
 }) {
   const { id } = await params;
   const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { data: projectRaw, error: projectError } = await supabase
     .from("projects")
@@ -103,6 +106,16 @@ export default async function ProjectPage({
     .order("collaborator_name", { ascending: true });
 
   const splits = (splitsRaw ?? []) as ProjectSplitRow[];
+
+  const { data: invitesRaw } = await supabase
+    .from("cosign_invites")
+    .select("*")
+    .eq("project_id", id)
+    .order("created_at", { ascending: true });
+
+  const invites = (invitesRaw ?? []) as CosignInviteRow[];
+
+  const isOwner = !!user && user.id === project.user_id;
 
   const participants = project.collaborators
     ? Array.from(
@@ -140,10 +153,10 @@ export default async function ProjectPage({
     <main className="min-h-screen bg-neutral-100 text-neutral-900">
       <div className="mx-auto max-w-6xl px-6 py-16">
         <Link
-          href="/"
+          href={isOwner ? "/dashboard" : "/"}
           className="inline-block text-sm font-medium text-neutral-600 transition hover:text-neutral-900"
         >
-          ← Back to home
+          {isOwner ? "← Dashboard" : "← SessionLedger"}
         </Link>
 
         <header className="mt-10 max-w-3xl border-b border-neutral-200 pb-10">
@@ -252,18 +265,26 @@ export default async function ProjectPage({
             </div>
           </section>
 
-          <section>
-            <h2 className="mb-4 text-lg font-semibold tracking-tight">
-              Add Contribution
-            </h2>
-            <AddContributionForm
-              projectId={id}
-              addContributionAction={addContribution}
-              participants={participants}
-            />
-          </section>
+          {isOwner ? (
+            <section>
+              <h2 className="mb-4 text-lg font-semibold tracking-tight">
+                Add Contribution
+              </h2>
+              <AddContributionForm
+                projectId={id}
+                addContributionAction={addContribution}
+                participants={participants}
+              />
+            </section>
+          ) : (
+            <div className="rounded-2xl border border-neutral-200 bg-neutral-50 px-6 py-4">
+              <p className="text-sm text-neutral-500">
+                You are viewing this project as a collaborator. Only the project owner can edit contributions and splits.
+              </p>
+            </div>
+          )}
 
-          <section>
+          {isOwner && <section>
             <h2 className="mb-1 text-lg font-semibold tracking-tight">
               Credits and splits
             </h2>
@@ -452,7 +473,15 @@ export default async function ProjectPage({
                 </div>
               </form>
             )}
-          </section>
+          </section>}
+
+          {isOwner && (
+            <InviteSection
+              projectId={id}
+              participants={participants}
+              existingInvites={invites}
+            />
+          )}
 
           <div className="rounded-2xl border border-dashed border-neutral-300 bg-neutral-50/80 p-8 text-center">
             {isConfirmed ? (
@@ -467,7 +496,7 @@ export default async function ProjectPage({
                   View Final Record
                 </Link>
               </>
-            ) : (
+            ) : isOwner ? (
               <>
                 <p className="mb-6 text-sm text-neutral-600">
                   Review and sign the record when splits total 100%.
@@ -483,6 +512,10 @@ export default async function ProjectPage({
                   </button>
                 </form>
               </>
+            ) : (
+              <p className="text-sm text-neutral-500">
+                Waiting for the project owner to finalize and confirm this record.
+              </p>
             )}
           </div>
         </div>

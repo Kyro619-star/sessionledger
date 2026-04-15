@@ -7,6 +7,7 @@ export type ProjectRow = {
   description: string | null;
   collaborators: string | null;
   created_at: string;
+  user_id: string | null;
   /** Ethereum transaction hash if this record has been anchored on-chain. */
   blockchain_tx_hash: string | null;
   /** EVM chain ID of the anchor transaction (11155111 = Sepolia testnet). */
@@ -22,6 +23,16 @@ export type ContributionRow = {
   contribution_type: string;
   contribution_other: string | null;
   notes: string | null;
+  created_at: string;
+};
+
+export type CosignInviteRow = {
+  id: string;
+  project_id: string;
+  collaborator_name: string;
+  token: string;
+  status: "pending" | "confirmed";
+  confirmed_at: string | null;
   created_at: string;
 };
 
