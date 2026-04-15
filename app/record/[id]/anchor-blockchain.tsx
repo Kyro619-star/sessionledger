@@ -145,11 +145,13 @@ export function AnchorToBlockchain({ recordData, existingTxHash }: Props) {
       };
       const recordHash = await hashRecord(canonicalRecord);
 
-      // 4. Send 0-ETH self-transaction with hash as calldata
-      //    This writes an immutable, timestamped record on-chain at minimal cost.
+      // 4. Send 0-ETH transaction to the SessionLedger anchor address with hash as calldata.
+      //    We use a fixed burn address as recipient (not self) because MetaMask blocks
+      //    data-bearing transactions to your own address.
+      const ANCHOR_ADDRESS = "0x000000000000000000000000000000000000dEaD";
       setStatus("signing");
       const tx = await signer.sendTransaction({
-        to: signerAddress,
+        to: ANCHOR_ADDRESS,
         value: BigInt(0),
         data: recordHash,
       });
