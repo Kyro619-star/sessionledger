@@ -33,10 +33,15 @@ export default function SignInPage() {
         router.refresh();
       }
     } else {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) {
         setError(error.message);
+      } else if (data.session) {
+        // Email confirmation is off — already logged in, go straight to dashboard
+        router.push("/dashboard");
+        router.refresh();
       } else {
+        // Email confirmation is on — ask them to check their inbox
         setSignupDone(true);
       }
     }
