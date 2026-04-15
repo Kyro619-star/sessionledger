@@ -10,6 +10,8 @@ import type {
 } from "@/lib/types/sessionledger";
 
 import { CopyRecordLinkButton } from "./copy-record-link";
+import { AnchorToBlockchain } from "./anchor-blockchain";
+import type { RecordData } from "./anchor-blockchain";
 
 function formatContributionType(value: string) {
   const map: Record<string, string> = {
@@ -122,6 +124,25 @@ export default async function FinalRecordPage({
         ),
       )
     : [];
+
+  // Build the canonical record object passed to the blockchain anchor component
+  const visibleSplits = splits.filter((s) =>
+    participants.includes(s.collaborator_name),
+  );
+  const recordData: RecordData = {
+    projectId: project.id,
+    title: project.title,
+    confirmedAt: project.confirmed_at,
+    collaborators: participants,
+    compositionSplits: visibleSplits.map((s) => ({
+      name: s.collaborator_name,
+      percent: Number(s.composition_split ?? 0),
+    })),
+    masterSplits: visibleSplits.map((s) => ({
+      name: s.collaborator_name,
+      percent: Number(s.master_split ?? 0),
+    })),
+  };
 
   return (
     <main className="min-h-screen bg-neutral-100 text-neutral-900">
@@ -304,10 +325,12 @@ export default async function FinalRecordPage({
               </p>
               <CopyRecordLinkButton />
             </div>
-            <p className="mt-4 text-xs leading-relaxed text-neutral-500">
-              Blockchain timestamp integration coming soon.
-            </p>
           </div>
+
+          <AnchorToBlockchain
+            recordData={recordData}
+            existingTxHash={project.blockchain_tx_hash}
+          />
 
           <Link
             href="/"
