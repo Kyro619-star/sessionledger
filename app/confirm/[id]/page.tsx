@@ -44,7 +44,7 @@ export default async function ConfirmProjectPage({
   const sp = await searchParams;
   const error = sp.error;
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data: projectRaw, error: projectError } = await supabase
     .from("projects")

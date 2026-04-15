@@ -1,6 +1,10 @@
 import Link from "next/link";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <main className="min-h-screen bg-neutral-100 text-neutral-900">
       <header className="border-b border-neutral-200/80 bg-neutral-100">
@@ -12,18 +16,37 @@ export default function Home() {
             SessionLedger
           </Link>
           <nav className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href="/sign-in"
-              className="rounded-full px-3 py-2 text-sm font-medium text-neutral-600 transition hover:bg-neutral-200/80 hover:text-neutral-900"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/create-project"
-              className="rounded-full bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-80"
-            >
-              Get started
-            </Link>
+            {user ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="rounded-full px-3 py-2 text-sm font-medium text-neutral-600 transition hover:bg-neutral-200/80 hover:text-neutral-900"
+                >
+                  Dashboard
+                </Link>
+                <Link
+                  href="/create-project"
+                  className="rounded-full bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-80"
+                >
+                  New project
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/sign-in"
+                  className="rounded-full px-3 py-2 text-sm font-medium text-neutral-600 transition hover:bg-neutral-200/80 hover:text-neutral-900"
+                >
+                  Sign in
+                </Link>
+                <Link
+                  href="/sign-in"
+                  className="rounded-full bg-black px-4 py-2 text-sm font-medium text-white transition hover:opacity-80"
+                >
+                  Get started
+                </Link>
+              </>
+            )}
           </nav>
         </div>
       </header>

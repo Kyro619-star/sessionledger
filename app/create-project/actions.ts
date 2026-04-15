@@ -16,7 +16,9 @@ export async function createProject(formData: FormData) {
   const collaborators =
     String(formData.get("collaborators") ?? "").trim() || null;
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { data, error } = await supabase
     .from("projects")
     .insert({
@@ -24,6 +26,7 @@ export async function createProject(formData: FormData) {
       project_type: projectType,
       description,
       collaborators,
+      user_id: user?.id ?? null,
     })
     .select("id")
     .single();

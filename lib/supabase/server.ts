@@ -1,17 +1,38 @@
-import { createClient } from "@supabase/supabase-js";
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
 
 /**
- * Server-only Supabase client (Server Actions, Route Handlers, Server Components).
- * Uses the publishable key + RLS. Safe to expose NEXT_PUBLIC_* in the browser;
- * this file still runs only on the server in our current setup.
+ * Server-only Supabase client for Server Components, Server Actions, and
+ * Route Handlers. Uses @supabase/ssr so auth session cookies are read
+ * automatically — this is what makes auth.getUser() work on the server.
  */
-export function createSupabaseServerClient() {
+export async function createSupabaseServerClient() {
+  const cookieStore = await cookies();
+
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !publishableKey) {
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+
+  if (!url || !key) {
     throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY. Copy env.example to .env.local.",
+      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY.",
     );
   }
-  return createClient(url, publishableKey);
+
+  return createServerClient(url, key, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) =>
+            cookieStore.set(name, value, options),
+          );
+        } catch {
+          // setAll called from a Server Component — safe to ignore,
+          // middleware handles session refresh.
+        }
+      },
+    },
+  });
 }

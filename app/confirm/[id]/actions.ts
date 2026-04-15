@@ -10,7 +10,7 @@ export async function confirmProject(formData: FormData) {
     redirect("/confirm?error=missing-project");
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { data: splitsRaw, error: splitsError } = await supabase
     .from("project_splits")

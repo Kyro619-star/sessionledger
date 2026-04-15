@@ -16,7 +16,7 @@ export async function saveBlockchainAnchor(
     throw new Error("Missing projectId or txHash");
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase
     .from("projects")

@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 async function getCanonicalParticipants(
-  supabase: ReturnType<typeof createSupabaseServerClient>,
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   projectId: string,
 ) {
   const { data, error } = await supabase
@@ -48,7 +48,7 @@ export async function addContribution(formData: FormData) {
     throw new Error("Missing other contribution detail");
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const participants = await getCanonicalParticipants(supabase, projectId);
   if (!participants.includes(participantName)) {
     throw new Error("Participant not in collaborators list");
@@ -77,7 +77,7 @@ export async function saveSplits(formData: FormData) {
     throw new Error("Missing split fields");
   }
 
-  const supabase = createSupabaseServerClient();
+  const supabase = await createSupabaseServerClient();
   const participants = await getCanonicalParticipants(supabase, projectId);
   const participantSet = new Set(participants);
 
