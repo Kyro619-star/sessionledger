@@ -14,7 +14,7 @@ export async function confirmProject(formData: FormData) {
 
   const { data: splitsRaw, error: splitsError } = await supabase
     .from("project_splits")
-    .select("split_percentage")
+    .select("composition_split, master_split")
     .eq("project_id", projectId);
 
   if (splitsError) {
@@ -22,12 +22,21 @@ export async function confirmProject(formData: FormData) {
     redirect(`/confirm/${projectId}?error=splits`);
   }
 
-  const total = (splitsRaw ?? []).reduce(
-    (sum, s) => sum + Number(s.split_percentage ?? 0),
+  const rows = splitsRaw ?? [];
+
+  const compTotal = rows.reduce(
+    (sum, s) => sum + Number(s.composition_split ?? 0),
     0,
   );
-  const rounded = Math.round(total * 100) / 100;
-  const splitsReady = Math.abs(rounded - 100) < 0.001;
+  const masterTotal = rows.reduce(
+    (sum, s) => sum + Number(s.master_split ?? 0),
+    0,
+  );
+
+  const splitsReady =
+    Math.abs(Math.round(compTotal * 100) / 100 - 100) < 0.001 &&
+    Math.abs(Math.round(masterTotal * 100) / 100 - 100) < 0.001;
+
   if (!splitsReady) {
     redirect(`/confirm/${projectId}?error=splits_total`);
   }
