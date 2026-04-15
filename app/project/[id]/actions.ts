@@ -133,6 +133,8 @@ export async function saveSplits(formData: FormData) {
         collaborator_name: s.collaborator_name,
         composition_split: s.composition_split,
         master_split: s.master_split,
+        // split_percentage kept for backward compat (NOT NULL column)
+        split_percentage: 0,
       })),
     );
 
