@@ -149,6 +149,14 @@ export default async function ProjectPage({
   // Both tracks must total 100% before the record can be confirmed
   const splitsReady = compReady && masterReady;
 
+  // Co-sign gate: all generated invites must be confirmed before owner can finalize
+  const pendingInvites = invites.filter((i) => i.status === "pending");
+  const confirmedInvites = invites.filter((i) => i.status === "confirmed");
+  const allCosigned = pendingInvites.length === 0 && confirmedInvites.length > 0;
+  // Also allow confirm if no invites have been generated at all (solo project or owner skipped invites)
+  const noInvitesGenerated = invites.length === 0;
+  const cosignReady = noInvitesGenerated || allCosigned;
+
   return (
     <main className="min-h-screen bg-neutral-100 text-neutral-900">
       <div className="mx-auto max-w-6xl px-6 py-16">
@@ -498,14 +506,29 @@ export default async function ProjectPage({
               </>
             ) : isOwner ? (
               <>
-                <p className="mb-6 text-sm text-neutral-600">
-                  Review and sign the record when splits total 100%.
-                </p>
+                {!splitsReady && (
+                  <p className="mb-3 text-sm text-neutral-500">
+                    Both (c) and (p) splits must total 100%.
+                  </p>
+                )}
+                {splitsReady && !cosignReady && (
+                  <p className="mb-3 text-sm text-amber-700">
+                    Waiting for collaborators to co-sign —{" "}
+                    {confirmedInvites.length} of {invites.length} confirmed.
+                  </p>
+                )}
+                {splitsReady && cosignReady && (
+                  <p className="mb-3 text-sm text-emerald-700">
+                    {noInvitesGenerated
+                      ? "Splits are set. Ready to review and confirm."
+                      : `All ${confirmedInvites.length} collaborators have co-signed. Ready to confirm.`}
+                  </p>
+                )}
                 <form action={reviewAndConfirm}>
                   <input type="hidden" name="projectId" value={id} />
                   <button
                     type="submit"
-                    disabled={!splitsReady}
+                    disabled={!splitsReady || !cosignReady}
                     className="rounded-full bg-black px-10 py-3 text-sm font-medium text-white transition hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-40"
                   >
                     Review and Confirm

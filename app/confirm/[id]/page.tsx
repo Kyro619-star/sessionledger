@@ -108,15 +108,19 @@ export default async function ConfirmProjectPage({
 
   return (
     <main className="min-h-screen bg-neutral-100 text-neutral-900">
-      <div className="mx-auto max-w-6xl px-6 py-16">
-        <Link
-          href={`/project/${id}`}
-          className="inline-block text-sm font-medium text-neutral-600 transition hover:text-neutral-900"
-        >
-          ← Back to project
-        </Link>
+      <header className="border-b border-neutral-200/80 bg-neutral-100">
+        <div className="mx-auto flex max-w-6xl items-center gap-4 px-6 py-4">
+          <Link
+            href={`/project/${id}`}
+            className="text-sm font-medium text-neutral-600 transition hover:text-neutral-900"
+          >
+            ← Back to project
+          </Link>
+        </div>
+      </header>
 
-        <header className="mt-10 max-w-2xl">
+      <div className="mx-auto max-w-6xl px-6 py-16">
+        <header className="mt-0 max-w-2xl">
           <h1 className="mb-4 text-4xl font-semibold leading-tight tracking-tight sm:text-5xl">
             Review and sign this record
           </h1>
