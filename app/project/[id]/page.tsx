@@ -13,6 +13,7 @@ import type {
 
 import { addContribution, saveSplits } from "./actions";
 import { InviteSection } from "./invite-section";
+import { OwnerPicker } from "./owner-picker";
 
 async function reviewAndConfirm(formData: FormData) {
   "use server";
@@ -130,6 +131,18 @@ export default async function ProjectPage({
 
   const isConfirmed = project.status === "confirmed";
 
+  // The owner's name within the participants list. May be null for legacy
+  // projects that pre-date the owner-picker; in that case we show an inline
+  // picker so the owner can self-identify before continuing.
+  const ownerName = project.owner_collaborator_name ?? null;
+
+  // The collaborators who actually need to co-sign — everyone except the owner.
+  // The owner's signature is captured implicitly when they click "Review and
+  // Confirm".
+  const cosigners = ownerName
+    ? participants.filter((n) => n !== ownerName)
+    : participants;
+
   // (c) Composition / Publishing — who wrote the song
   const compTotal = splits.reduce(
     (sum, s) => sum + Number(s.composition_split ?? 0),
@@ -149,13 +162,33 @@ export default async function ProjectPage({
   // Both tracks must total 100% before the record can be confirmed
   const splitsReady = compReady && masterReady;
 
-  // Co-sign gate: all generated invites must be confirmed before owner can finalize
-  const pendingInvites = invites.filter((i) => i.status === "pending");
-  const confirmedInvites = invites.filter((i) => i.status === "confirmed");
-  const allCosigned = pendingInvites.length === 0 && confirmedInvites.length > 0;
-  // Also allow confirm if no invites have been generated at all (solo project or owner skipped invites)
-  const noInvitesGenerated = invites.length === 0;
-  const cosignReady = noInvitesGenerated || allCosigned;
+  // Owner must self-identify before they can finalize, so legacy projects
+  // get gated on the picker until they do.
+  const ownerIdentified = !!ownerName;
+
+  // Only invites that belong to a real cosigner count toward the gate. (If a
+  // legacy invite was generated for the owner before this change, ignore it.)
+  const cosignerSet = new Set(cosigners);
+  const relevantInvites = invites.filter((i) =>
+    cosignerSet.has(i.collaborator_name),
+  );
+  const pendingInvites = relevantInvites.filter((i) => i.status === "pending");
+  const confirmedInvites = relevantInvites.filter(
+    (i) => i.status === "confirmed",
+  );
+
+  // Solo project (no other cosigners) — owner can confirm directly.
+  const soloProject = cosigners.length === 0;
+  // Every cosigner must have an invite, and every invite must be confirmed.
+  const everyCosignerInvited = cosigners.every((n) =>
+    relevantInvites.some((i) => i.collaborator_name === n),
+  );
+  const allCosigned =
+    everyCosignerInvited &&
+    pendingInvites.length === 0 &&
+    confirmedInvites.length === cosigners.length;
+
+  const cosignReady = ownerIdentified && (soloProject || allCosigned);
 
   return (
     <main className="min-h-screen bg-neutral-100 text-neutral-900">
@@ -483,10 +516,14 @@ export default async function ProjectPage({
             )}
           </section>}
 
-          {isOwner && (
+          {isOwner && !ownerIdentified && participants.length > 0 && (
+            <OwnerPicker projectId={id} participants={participants} />
+          )}
+
+          {isOwner && ownerIdentified && (
             <InviteSection
               projectId={id}
-              participants={participants}
+              cosigners={cosigners}
               existingInvites={invites}
             />
           )}
@@ -506,22 +543,27 @@ export default async function ProjectPage({
               </>
             ) : isOwner ? (
               <>
-                {!splitsReady && (
+                {!ownerIdentified && participants.length > 0 && (
+                  <p className="mb-3 text-sm text-amber-700">
+                    Pick which collaborator name is you above before confirming.
+                  </p>
+                )}
+                {ownerIdentified && !splitsReady && (
                   <p className="mb-3 text-sm text-neutral-500">
                     Both (c) and (p) splits must total 100%.
                   </p>
                 )}
-                {splitsReady && !cosignReady && (
+                {ownerIdentified && splitsReady && !cosignReady && (
                   <p className="mb-3 text-sm text-amber-700">
                     Waiting for collaborators to co-sign —{" "}
-                    {confirmedInvites.length} of {invites.length} confirmed.
+                    {confirmedInvites.length} of {cosigners.length} confirmed.
                   </p>
                 )}
-                {splitsReady && cosignReady && (
+                {ownerIdentified && splitsReady && cosignReady && (
                   <p className="mb-3 text-sm text-emerald-700">
-                    {noInvitesGenerated
+                    {soloProject
                       ? "Splits are set. Ready to review and confirm."
-                      : `All ${confirmedInvites.length} collaborators have co-signed. Ready to confirm.`}
+                      : `All ${cosigners.length} collaborators have co-signed. Ready to confirm.`}
                   </p>
                 )}
                 <form action={reviewAndConfirm}>

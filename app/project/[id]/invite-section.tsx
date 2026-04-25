@@ -1,29 +1,42 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import type { CosignInviteRow } from "@/lib/types/sessionledger";
 import { createCosignInvite } from "./invite-actions";
 
 type Props = {
   projectId: string;
-  participants: string[];
+  /** Collaborators who need to co-sign — this should already exclude the owner. */
+  cosigners: string[];
   existingInvites: CosignInviteRow[];
 };
 
-export function InviteSection({ projectId, participants, existingInvites }: Props) {
+export function InviteSection({ projectId, cosigners, existingInvites }: Props) {
   const [isPending, startTransition] = useTransition();
-  const [invites, setInvites] = useState<Record<string, string>>(
-    () => Object.fromEntries(
-      existingInvites
-        .filter((i) => i.status === "pending")
-        .map((i) => [i.collaborator_name, i.token])
-    )
-  );
-  const [confirmedNames, setConfirmedNames] = useState<Set<string>>(
-    () => new Set(existingInvites.filter((i) => i.status === "confirmed").map((i) => i.collaborator_name))
-  );
+  // Optimistic tokens we just generated client-side; merged on top of server state.
+  const [optimisticTokens, setOptimisticTokens] = useState<Record<string, string>>({});
   const [copied, setCopied] = useState<string | null>(null);
   const [generating, setGenerating] = useState<string | null>(null);
+
+  // Derive directly from server props so the UI follows the latest revalidation.
+  const tokensFromServer = useMemo(() => {
+    return Object.fromEntries(
+      existingInvites
+        .filter((i) => i.status === "pending")
+        .map((i) => [i.collaborator_name, i.token]),
+    );
+  }, [existingInvites]);
+
+  const confirmedNames = useMemo(() => {
+    return new Set(
+      existingInvites
+        .filter((i) => i.status === "confirmed")
+        .map((i) => i.collaborator_name),
+    );
+  }, [existingInvites]);
+
+  // Optimistic tokens win for newly generated links; otherwise fall back to server state.
+  const tokens: Record<string, string> = { ...tokensFromServer, ...optimisticTokens };
 
   function getLink(token: string) {
     return `${window.location.origin}/cosign/${token}`;
@@ -38,7 +51,7 @@ export function InviteSection({ projectId, participants, existingInvites }: Prop
     startTransition(async () => {
       try {
         const token = await createCosignInvite(formData);
-        setInvites((prev) => ({ ...prev, [name]: token }));
+        setOptimisticTokens((prev) => ({ ...prev, [name]: token }));
       } catch (e) {
         console.error(e);
       } finally {
@@ -57,10 +70,22 @@ export function InviteSection({ projectId, participants, existingInvites }: Prop
     }
   }
 
-  if (participants.length === 0) return null;
+  if (cosigners.length === 0) {
+    return (
+      <section>
+        <h2 className="mb-1 text-lg font-semibold tracking-tight">
+          Collaborator co-signatures
+        </h2>
+        <p className="rounded-2xl border border-neutral-200 bg-white px-5 py-6 text-sm text-neutral-600 shadow-sm">
+          No other collaborators on this record. You can confirm whenever
+          splits are ready.
+        </p>
+      </section>
+    );
+  }
 
-  const confirmedCount = confirmedNames.size;
-  const totalCount = participants.length;
+  const confirmedCount = cosigners.filter((n) => confirmedNames.has(n)).length;
+  const totalCount = cosigners.length;
 
   return (
     <section>
@@ -77,13 +102,14 @@ export function InviteSection({ projectId, participants, existingInvites }: Prop
         Generate a unique link for each person and send it to them directly.
       </p>
       <p className="mb-6 rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-sm text-neutral-600">
-        💡 <strong>You don't need to invite yourself.</strong> Your signature comes from clicking "Review and Confirm" at the bottom of this page.
+        💡 <strong>You don&apos;t need to invite yourself.</strong> Your signature
+        comes from clicking &quot;Review and Confirm&quot; at the bottom of this page.
       </p>
 
       <div className="overflow-hidden rounded-2xl border border-neutral-200 bg-white shadow-sm">
         <ul className="divide-y divide-neutral-100">
-          {participants.map((name) => {
-            const token = invites[name];
+          {cosigners.map((name) => {
+            const token = tokens[name];
             const isConfirmed = confirmedNames.has(name);
             const isGenerating = generating === name && isPending;
 

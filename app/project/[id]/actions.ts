@@ -151,3 +151,49 @@ export async function saveSplits(formData: FormData) {
     return;
   }
 }
+
+export async function setOwnerCollaboratorName(formData: FormData) {
+  const projectId = String(formData.get("projectId") ?? "").trim();
+  const ownerName = String(formData.get("ownerName") ?? "").trim();
+
+  if (!projectId || !ownerName) {
+    throw new Error("Missing fields");
+  }
+
+  const supabase = await createSupabaseServerClient();
+
+  // Only the owner can set this.
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: project } = await supabase
+    .from("projects")
+    .select("user_id, collaborators")
+    .eq("id", projectId)
+    .single();
+
+  if (!project || project.user_id !== user.id) {
+    throw new Error("Not authorized");
+  }
+
+  // Validate the chosen name actually appears in the collaborators string.
+  const participants = String(project.collaborators ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  if (!participants.includes(ownerName)) {
+    throw new Error("Selected name is not in the collaborator list");
+  }
+
+  const { error } = await supabase
+    .from("projects")
+    .update({ owner_collaborator_name: ownerName })
+    .eq("id", projectId);
+
+  if (error) {
+    console.error("setOwnerCollaboratorName error", error);
+    throw new Error("Could not save owner name");
+  }
+
+  revalidatePath(`/project/${projectId}`);
+}

@@ -108,9 +108,30 @@ export default async function CreateProjectPage({
 
             <div>
               <label
+                htmlFor="owner-name"
                 className="mb-2 block text-sm font-medium text-neutral-700"
               >
-                Collaborators
+                Your name
+              </label>
+              <input
+                id="owner-name"
+                name="ownerName"
+                type="text"
+                autoComplete="off"
+                placeholder="The name to credit you under"
+                className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-200"
+              />
+              <p className="mt-2 text-sm text-neutral-500">
+                You&apos;ll be added to the record automatically — no need to list
+                yourself below.
+              </p>
+            </div>
+
+            <div>
+              <label
+                className="mb-2 block text-sm font-medium text-neutral-700"
+              >
+                Other collaborators
               </label>
               <CollaboratorsTagsInput />
             </div>

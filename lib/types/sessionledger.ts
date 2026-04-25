@@ -6,6 +6,8 @@ export type ProjectRow = {
   confirmed_at: string | null;
   description: string | null;
   collaborators: string | null;
+  /** Which name in `collaborators` belongs to the project owner. Null for legacy projects until the owner picks. */
+  owner_collaborator_name: string | null;
   created_at: string;
   user_id: string | null;
   /** Ethereum transaction hash if this record has been anchored on-chain. */

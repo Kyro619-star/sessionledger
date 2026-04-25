@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export async function confirmCosign(token: string) {
@@ -29,6 +31,10 @@ export async function confirmCosign(token: string) {
     console.error(error);
     throw new Error("Could not confirm co-sign");
   }
+
+  // Bust the project page cache so the owner sees the updated state.
+  revalidatePath(`/project/${invite.project_id}`);
+  revalidatePath(`/cosign/${token}`);
 
   return { alreadyConfirmed: false };
 }

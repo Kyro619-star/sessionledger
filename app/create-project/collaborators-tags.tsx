@@ -108,7 +108,7 @@ export function CollaboratorsTagsInput() {
       </div>
 
       <p className="mt-2 text-sm text-neutral-600">
-        Add everyone you want included in this record. Press Enter after each
+        Add the other people who worked on this with you. Press Enter after each
         name.
       </p>
     </div>
