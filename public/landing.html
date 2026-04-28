@@ -1,0 +1,3448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SessionLedger — A registry for music collaborators</title>
+<meta name="description" content="Verified provenance for the people who actually make the music. Every session you show up to, on the record. Forever.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=GT+Pressura+Mono&family=Caveat:wght@400..700&family=Inter+Tight:wght@300..600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* MONOCHROME ONLY — black + white with tonal variation for depth */
+  --black:     #0B0B0C;
+  --black-2:  #131316;
+  --black-3:  #1B1B1F;
+  --black-4:  #25252A;
+
+  --paper:     #F4EFE3;
+  --paper-2:   #ECE5D2;
+  --paper-3:   #DFD7BF;
+  --paper-4:   #C9C0A5;
+  --ink:       #1A1A1C;
+  --ink-2:     #2A2A2C;
+
+  /* tonal gradients of cream/black for layered surfaces */
+  --c95: rgba(244,239,227,0.95);
+  --c80: rgba(244,239,227,0.80);
+  --c60: rgba(244,239,227,0.60);
+  --c40: rgba(244,239,227,0.40);
+  --c25: rgba(244,239,227,0.25);
+  --c12: rgba(244,239,227,0.12);
+  --c06: rgba(244,239,227,0.06);
+  --c03: rgba(244,239,227,0.03);
+  --i80: rgba(26,26,28,0.80);
+  --i60: rgba(26,26,28,0.60);
+  --i40: rgba(26,26,28,0.40);
+  --i20: rgba(26,26,28,0.20);
+  --i12: rgba(26,26,28,0.12);
+  --i06: rgba(26,26,28,0.06);
+
+  /* the only "warm" — REC's rosy cheek (single warm spot) */
+  --rose:      #E8B5A8;
+
+  --display: 'Fraunces', serif;
+  --body:    'Inter Tight', system-ui, sans-serif;
+  --mono:    'GT Pressura Mono', ui-monospace, 'Courier New', monospace;
+  --hand:    'Caveat', cursive;
+
+  --ease:  cubic-bezier(0.16, 1, 0.3, 1);
+  --easef: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { background: var(--black); }
+body {
+  font-family: var(--body);
+  color: var(--paper);
+  font-size: 15px;
+  line-height: 1.55;
+  font-weight: 400;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  cursor: none;
+}
+a { color: inherit; text-decoration: none; }
+button { font: inherit; color: inherit; background: none; border: none; cursor: none; }
+::selection { background: var(--paper); color: var(--ink); }
+
+/* ════════════════ TEXTURE SYSTEM — every surface has paper grain ════════════════ */
+.tex-paper {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.14  0 0 0 0 0.12  0 0 0 0.55 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.55;
+  mix-blend-mode: multiply;
+}
+.tex-paper.crumple {
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 600 600' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='2' seed='3'/%3E%3CfeColorMatrix values='0 0 0 0 0.1  0 0 0 0 0.09  0 0 0 0 0.08  0 0 0 0.18 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.14  0 0 0 0 0.12  0 0 0 0.45 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.7;
+}
+.tex-film {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 320 320' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.95  0 0 0 0 0.92  0 0 0 0 0.85  0 0 0 0.7 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.10;
+  mix-blend-mode: overlay;
+}
+.tex-grain-fixed {
+  position: fixed; inset: 0; pointer-events: none;
+  z-index: 51;
+  opacity: 0.08;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 320 320' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 0.97  0 0 0 0 0.9  0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: gr 16s steps(12) infinite;
+}
+@keyframes gr {
+  0%   { transform: translate(0,0); }
+  20%  { transform: translate(-2%,-2%); }
+  50%  { transform: translate(2%,1%); }
+  80%  { transform: translate(-1%,2%); }
+}
+
+/* ════════════════ MASCOT-LED LOADER ════════════════ */
+.pre {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--black);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 32px;
+  transition: opacity 0.7s var(--ease), transform 0.9s var(--ease);
+}
+.pre.gone { opacity: 0; transform: scale(1.04); pointer-events: none; }
+
+.pre-mascot {
+  width: 110px;
+  height: 160px;
+  filter: drop-shadow(0 12px 32px rgba(244,239,227,0.06));
+  animation: pre-bob 2s ease-in-out infinite;
+}
+@keyframes pre-bob {
+  0%,100% { transform: translateY(0) rotate(-1deg); }
+  50%     { transform: translateY(-5px) rotate(1deg); }
+}
+.pre-text {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--c40);
+  text-align: center;
+  min-height: 14px;
+}
+.pre-text strong { color: var(--paper); font-weight: 500; transition: color 0.3s; }
+.pre-tape {
+  display: flex; gap: 6px;
+  align-items: center;
+}
+.pre-tape-dot {
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--c25);
+  transition: background 0.3s, transform 0.4s var(--ease);
+}
+.pre-tape-dot.on {
+  background: var(--paper);
+  transform: scale(1.4);
+}
+
+/* ════════════════ SCROLL PROGRESS ════════════════ */
+.scroll-progress {
+  position: fixed;
+  top: 0; left: 0;
+  height: 1.5px;
+  background: var(--paper);
+  z-index: 100;
+  width: 0;
+  transition: width 0.1s linear;
+  box-shadow: 0 0 8px rgba(244,239,227,0.3);
+}
+body.on-paper .scroll-progress { background: var(--ink); box-shadow: 0 0 8px rgba(26,26,28,0.3); }
+
+/* ════════════════ CURSOR — SMALL DOT ONLY (no circle interfering) ════════════════ */
+.cur-dot {
+  position: fixed; pointer-events: none; z-index: 9998;
+  top: 0; left: 0;
+  width: 6px; height: 6px;
+  background: var(--paper);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  will-change: transform;
+  transition: width 0.2s, height 0.2s, background 0.3s, opacity 0.3s;
+  mix-blend-mode: difference;
+}
+body.cur-hover .cur-dot {
+  width: 14px; height: 14px;
+  background: var(--paper);
+}
+body.cur-stamp .cur-dot {
+  width: 4px; height: 4px;
+}
+
+.note-trail {
+  position: fixed; pointer-events: none; z-index: 9997;
+  top: 0; left: 0;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 18px;
+  color: var(--paper);
+  transform: translate(-50%, -50%);
+  will-change: transform, opacity;
+  animation: note-fade 1.5s ease-out forwards;
+  text-shadow: 0 0 12px rgba(244,239,227,0.4);
+  mix-blend-mode: difference;
+}
+@keyframes note-fade {
+  0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(-12deg); }
+  20%  { opacity: 0.85; transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(-50%, -130%) scale(0.4) rotate(18deg); }
+}
+
+/* ════════════════ NAV ════════════════ */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 90;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  padding: 22px 36px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  background: linear-gradient(to bottom, rgba(11,11,12,0.85), rgba(11,11,12,0));
+  pointer-events: none;
+  transition: background 0.5s var(--ease);
+}
+.nav > * { pointer-events: auto; }
+.nav.on-paper { background: linear-gradient(to bottom, rgba(244,239,227,0.85), rgba(244,239,227,0)); }
+.nav-brand {
+  display: flex; align-items: center; gap: 14px;
+  font-family: var(--display);
+  font-size: 23px;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  text-transform: none;
+  transition: color 0.5s var(--ease);
+}
+.nav-brand-mark {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: 1px solid var(--c40);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.nav-brand-mark::before {
+  content: '';
+  width: 6px; height: 6px;
+  background: var(--paper);
+  border-radius: 50%;
+  animation: pre-blink 2s infinite;
+}
+.nav.on-paper .nav-brand-mark { border-color: var(--i40); }
+.nav.on-paper .nav-brand-mark::before { background: var(--ink); }
+@keyframes pre-blink { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+.nav.on-paper .nav-brand { color: var(--ink); }
+.nav-brand em {
+  font-style: italic;
+  color: var(--c80);
+  font-weight: 400;
+}
+.nav.on-paper .nav-brand em { color: var(--i60); }
+.nav-mid {
+  display: flex; gap: 32px;
+  justify-content: center;
+}
+.nav-mid a {
+  position: relative;
+  color: var(--c80);
+  transition: color 0.3s;
+  font-size: 10px;
+}
+.nav.on-paper .nav-mid a { color: var(--i60); }
+.nav-mid a:hover { color: var(--paper); }
+.nav.on-paper .nav-mid a:hover { color: var(--ink); }
+.nav-mid a::after {
+  content: ''; position: absolute;
+  left: 0; right: 0; bottom: -5px;
+  height: 1px; background: var(--paper);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.4s var(--ease);
+}
+.nav.on-paper .nav-mid a::after { background: var(--ink); }
+.nav-mid a:hover::after { transform: scaleX(1); }
+.nav-right { display: flex; align-items: center; gap: 22px; }
+.lang { display: flex; align-items: center; gap: 6px; font-size: 10px; }
+.lang a { color: var(--c80); transition: color 0.3s; cursor: none; }
+.nav.on-paper .lang a { color: var(--i40); }
+.lang a.on { color: var(--paper); }
+.nav.on-paper .lang a.on { color: var(--ink); }
+.lang .sep { color: var(--c25); }
+.signin { color: var(--c80); font-size: 10px; transition: color 0.3s; }
+.nav.on-paper .signin { color: var(--i80); }
+.signin:hover { color: var(--paper); }
+.nav.on-paper .signin:hover { color: var(--ink); }
+.start-cta {
+  position: relative;
+  padding: 11px 20px;
+  border: 1px solid var(--c60);
+  border-radius: 100px;
+  color: var(--paper);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  display: inline-flex; align-items: center; gap: 10px;
+  transition: all 0.4s var(--ease);
+  overflow: hidden;
+  z-index: 1;
+}
+.nav.on-paper .start-cta { border-color: var(--ink); color: var(--ink); }
+.start-cta::before {
+  content: ''; position: absolute; inset: 0;
+  background: var(--paper);
+  transform: translateX(-101%);
+  transition: transform 0.5s var(--ease);
+  z-index: -1;
+}
+.nav.on-paper .start-cta::before { background: var(--ink); }
+.start-cta:hover { color: var(--ink); border-color: var(--paper); }
+.nav.on-paper .start-cta:hover { color: var(--paper); border-color: var(--ink); }
+.start-cta:hover::before { transform: translateX(0); }
+.start-cta .arr { transition: transform 0.4s var(--ease); }
+.start-cta:hover .arr { transform: translateX(3px); }
+
+/* ════════════════ HERO ════════════════ */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  z-index: 10;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--black);
+}
+.hero-tex-1, .hero-tex-2 {
+  position: absolute; inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.hero-tex-1 {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 600 600' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.008' numOctaves='3' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 0.96  0 0 0 0 0.94  0 0 0 0 0.88  0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E");
+  mix-blend-mode: screen;
+  opacity: 0.7;
+}
+.hero-tex-2 {
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 50%, transparent 25%, rgba(0,0,0,0.65) 100%),
+    radial-gradient(ellipse 60% 40% at 30% 80%, rgba(244,239,227,0.04) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 70% 20%, rgba(244,239,227,0.03) 0%, transparent 60%);
+}
+
+#ambient-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 2;
+  opacity: 0.5;
+  pointer-events: none;
+}
+#hero-canvas {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.hero-cta-row {
+  position: absolute;
+  bottom: 130px;
+  left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  z-index: 5;
+  opacity: 0;
+  animation: rise 1.2s var(--ease) 1.6s forwards;
+}
+@keyframes rise {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.cta-link {
+  display: inline-flex;
+  align-items: center; gap: 14px;
+  padding: 16px 28px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  border: 1px solid var(--paper);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 100px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s var(--ease);
+}
+.cta-link.ghost {
+  background: transparent;
+  color: var(--paper);
+  border-color: var(--c40);
+}
+.cta-link:hover { transform: translateY(-1px); }
+.cta-link.ghost:hover { border-color: var(--paper); }
+.cta-link .arr { transition: transform 0.4s var(--ease); display: inline-block; }
+.cta-link:hover .arr { transform: translateX(3px); }
+.cta-link .ic { width: 5px; height: 5px; background: currentColor; border-radius: 50%; }
+
+.scroll-hint {
+  position: absolute;
+  bottom: 36px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  z-index: 4;
+  pointer-events: none;
+}
+.scroll-hint-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--c60);
+  opacity: 0;
+  animation: rise 1.2s var(--ease) 2.4s forwards;
+  text-align: center;
+}
+.scroll-hint .scroll-line {
+  width: 1px; height: 22px;
+  background: linear-gradient(to bottom, var(--c60), transparent);
+  animation: scrolly 2.4s ease-in-out infinite;
+}
+@keyframes scrolly {
+  0%,100% { transform: scaleY(0.4); transform-origin: top; opacity: 0.4; }
+  50%     { transform: scaleY(1); opacity: 1; }
+}
+
+/* tiny mascot peek in hero corner — appears late */
+.hero-peek {
+  position: absolute;
+  bottom: 60px; right: 60px;
+  width: 50px; height: 70px;
+  z-index: 4;
+  filter: drop-shadow(0 8px 20px rgba(244,239,227,0.10));
+  opacity: 0;
+  animation: hero-peek-in 1.2s var(--ease) 3.2s forwards;
+  transform: rotate(6deg);
+}
+@keyframes hero-peek-in {
+  from { opacity: 0; transform: rotate(6deg) translateY(20px); }
+  to { opacity: 1; transform: rotate(6deg) translateY(0); }
+}
+
+/* ════════════════ SECTION TAGS ════════════════ */
+.section-tag {
+  display: flex; align-items: center; gap: 14px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  margin-bottom: 50px;
+  position: relative;
+  z-index: 2;
+}
+.section-tag::before {
+  content: ''; width: 32px; height: 1px;
+  background: currentColor;
+  display: inline-block;
+}
+.section-tag .num {
+  font-family: var(--mono);
+  font-size: 9px;
+  opacity: 0.5;
+}
+
+/* ════════════════ PROBLEM SECTION (white) ════════════════ */
+.problem {
+  position: relative;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 200px 40px 220px;
+  z-index: 10;
+  overflow: hidden;
+}
+.problem-head {
+  position: relative; z-index: 2;
+  max-width: 1280px;
+  margin: 0 auto 110px;
+}
+.problem-h {
+  font-family: var(--display);
+  font-size: clamp(56px, 7.4vw, 124px);
+  line-height: 0.98;
+  font-weight: 350;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin-bottom: 50px;
+  max-width: 14ch;
+}
+.problem-h em { font-style: italic; }
+.problem-h-line { display: block; padding-bottom: 0.08em; }
+.problem-pre {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--i60);
+  margin-bottom: 24px;
+}
+.problem-deck {
+  font-family: var(--display);
+  font-size: clamp(20px, 2vw, 28px);
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1.45;
+  color: var(--i80);
+  max-width: 760px;
+  border-top: 1px dashed var(--i20);
+  padding-top: 36px;
+}
+.problem-deck em { font-style: normal; color: var(--ink); }
+.problem-cards {
+  position: relative; z-index: 2;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 50px;
+}
+.prob-card {
+  border-top: 1.5px solid var(--ink);
+  padding-top: 24px;
+  transition: transform 0.4s var(--ease);
+  position: relative;
+}
+.prob-card:hover { transform: translateY(-6px); }
+.prob-card-meta {
+  display: flex; justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 22px;
+}
+.prob-card-n {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--ink);
+  font-weight: 350;
+}
+.prob-card-tag {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--i60);
+}
+.prob-card-h {
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 400;
+  line-height: 1.18;
+  margin-bottom: 14px;
+  color: var(--ink);
+  letter-spacing: -0.005em;
+}
+.prob-card-p {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--i80);
+}
+.problem-mascot {
+  position: absolute;
+  bottom: 80px; left: 50px;
+  width: 72px; height: 100px;
+  z-index: 2;
+  animation: floaty 5s ease-in-out infinite;
+}
+.problem-mascot-note {
+  position: absolute;
+  bottom: 78px; left: 150px;
+  font-family: var(--hand);
+  font-size: 22px;
+  color: var(--ink);
+  z-index: 2;
+  max-width: 200px;
+  line-height: 1.2;
+}
+@keyframes floaty {
+  0%,100% { transform: translateY(0) rotate(-1deg); }
+  50%     { transform: translateY(-6px) rotate(1deg); }
+}
+
+/* ════════════════ ANATOMY (black) ════════════════ */
+.anatomy {
+  position: relative;
+  background: var(--black);
+  color: var(--paper);
+  padding: 200px 40px 220px;
+  z-index: 10;
+  overflow: hidden;
+}
+/* spotlight on the polaroid */
+.anatomy::before {
+  content: ''; position: absolute;
+  top: 50%; right: 18%;
+  transform: translateY(-50%);
+  width: 750px; height: 750px;
+  background: radial-gradient(circle, rgba(244,239,227,0.07) 0%, transparent 60%);
+  pointer-events: none; z-index: 1;
+  animation: glowpulse 9s ease-in-out infinite;
+}
+@keyframes glowpulse {
+  0%,100% { opacity: 1; }
+  50%     { opacity: 0.65; }
+}
+.anatomy .section-tag { color: var(--c60); }
+
+.an-grid {
+  position: relative; z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 100px;
+  align-items: center;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.an-h {
+  font-family: var(--display);
+  font-size: clamp(56px, 7vw, 120px);
+  line-height: 1.04;
+  letter-spacing: -0.025em;
+  font-weight: 350;
+  margin-bottom: 38px;
+  color: var(--paper);
+}
+.an-h em { font-style: italic; opacity: 0.7; }
+.an-h-line { display: block; padding-bottom: 0.06em; }
+.an-p {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--c80);
+  max-width: 460px;
+  margin-bottom: 16px;
+}
+.an-p strong {
+  color: var(--paper); font-weight: 500;
+  border-bottom: 1px solid var(--paper);
+  padding-bottom: 1px;
+}
+.an-hint {
+  font-family: var(--hand);
+  font-size: 24px;
+  color: var(--paper);
+  margin-top: 32px;
+  display: flex; align-items: center; gap: 14px;
+}
+.an-hint::before {
+  content: '─────';
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--c40);
+}
+
+/* ambient music motifs */
+.an-motif {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.10;
+  z-index: 1;
+  color: var(--paper);
+}
+.an-motif.staff { top: 14%; left: 4%; width: 130px; animation: floaty 11s ease-in-out infinite; }
+.an-motif.cassette { bottom: 18%; right: 50%; width: 80px; animation: floaty 13s ease-in-out infinite reverse; transform: rotate(-12deg); }
+.an-motif.vinyl1 { top: 12%; right: 8%; width: 70px; opacity: 0.06; animation: vinyl-spin 28s linear infinite; }
+.an-motif.notes { top: 50%; left: 8%; width: 50px; opacity: 0.13; animation: floaty 9s ease-in-out infinite; }
+@keyframes vinyl-spin { to { transform: rotate(360deg); } }
+
+/* mascot in anatomy corner */
+.an-rec-corner {
+  position: absolute;
+  bottom: 80px; left: 60px;
+  width: 70px; height: 100px;
+  z-index: 3;
+  filter: drop-shadow(0 6px 20px rgba(244,239,227,0.12));
+  animation: floaty 5s ease-in-out infinite;
+}
+.an-rec-corner-note {
+  position: absolute;
+  bottom: 72px; left: 150px;
+  font-family: var(--hand);
+  font-size: 18px;
+  color: var(--paper);
+  z-index: 3;
+  max-width: 200px;
+}
+
+/* polaroid card — the cream object on black */
+.an-stage {
+  position: relative;
+  perspective: 1800px;
+  display: flex; justify-content: center;
+}
+.an-card {
+  position: relative;
+  background: var(--paper-2);
+  color: var(--ink);
+  width: 100%;
+  max-width: 480px;
+  border-radius: 2px;
+  transform: rotate(2deg);
+  transform-style: preserve-3d;
+  transition: transform 0.6s var(--easef);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    0 60px 120px rgba(0,0,0,0.5),
+    0 20px 40px rgba(0,0,0,0.35),
+    0 0 0 1px rgba(244,239,227,0.04);
+  padding: 28px 28px 0;
+}
+.an-card .tex-paper { border-radius: 2px; }
+.an-card::before {
+  content: ''; position: absolute; inset: 0;
+  border-radius: 2px;
+  background: var(--paper-3);
+  transform: translate(-8px, 8px);
+  z-index: -1;
+  box-shadow: 0 30px 60px rgba(0,0,0,0.3);
+}
+.an-card::after {
+  content: ''; position: absolute; inset: 0;
+  border-radius: 2px;
+  background: var(--paper-4);
+  transform: translate(-16px, 16px);
+  z-index: -2;
+  opacity: 0.7;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+.an-card-window {
+  position: relative;
+  background: var(--paper-3);
+  padding: 28px 26px;
+  margin-bottom: 14px;
+  font-family: var(--mono);
+  border: 1px solid var(--i12);
+  z-index: 1;
+}
+.an-card-head {
+  display: flex; justify-content: space-between;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin-bottom: 28px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed var(--i20);
+}
+.an-card-head .id {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--ink);
+}
+.an-card-head .id::before {
+  content: ''; width: 6px; height: 6px;
+  background: var(--ink); border-radius: 50%;
+  animation: pre-blink 1.8s infinite;
+}
+.an-card-head .light { color: var(--i60); }
+.an-card-title {
+  font-family: var(--display);
+  font-size: 36px;
+  line-height: 1.10;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.an-card-when {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--i60);
+  margin-bottom: 28px;
+}
+.an-card-roles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 22px 32px;
+  margin-bottom: 24px;
+}
+.role { padding-top: 14px; border-top: 1px dashed var(--i20); transition: transform 0.3s; }
+.role:hover { transform: translateY(-2px); }
+.role-l {
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--i60);
+  margin-bottom: 8px;
+}
+.role-n {
+  font-family: var(--display);
+  font-size: 22px;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 4px;
+  line-height: 1.18;
+}
+.role-pct {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink);
+}
+.an-card-foot {
+  display: flex; justify-content: space-between; align-items: end;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--i60);
+  border-top: 1px dashed var(--i20);
+  padding-top: 14px;
+}
+.an-card-foot div span { color: var(--ink); }
+.an-card-seal {
+  width: 32px; height: 32px;
+  border: 1px solid var(--ink);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.an-card-seal svg { width: 18px; height: 18px; }
+.an-card-caption {
+  font-family: var(--hand);
+  font-size: 22px;
+  color: var(--ink);
+  text-align: center;
+  padding: 18px 0 26px;
+  position: relative;
+}
+.an-card-caption::before {
+  content: '×';
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.an-card-caption::after {
+  content: '04·03·26';
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--i60);
+}
+
+/* ════════════════ WORKFLOW (black, horizontal) ════════════════ */
+.wf {
+  position: relative;
+  background: var(--black);
+  color: var(--paper);
+  height: 600vh;
+  z-index: 10;
+}
+.wf-sticky {
+  position: sticky; top: 0;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: 90px 0 50px;
+  overflow: hidden;
+}
+.wf-sticky::before {
+  content: ''; position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(244,239,227,0.05) 0%, transparent 70%);
+  pointer-events: none;
+}
+.wf-head {
+  text-align: center;
+  padding: 0 40px 20px;
+  position: relative;
+  z-index: 3;
+}
+.wf-head .section-tag { justify-content: center; color: var(--c60); margin-bottom: 28px; }
+.wf-head h2 {
+  font-family: var(--display);
+  font-size: clamp(36px, 4vw, 64px);
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  font-weight: 350;
+  color: var(--paper);
+}
+.wf-head h2 em { font-style: italic; opacity: 0.7; }
+
+.wf-stage-wrap {
+  position: relative;
+  overflow: hidden;
+}
+.wf-stage {
+  display: flex;
+  height: 100%;
+  width: 500vw;
+  will-change: transform;
+}
+.wf-step {
+  flex: 0 0 100vw;
+  width: 100vw;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 60px;
+  position: relative;
+  overflow: hidden;
+}
+.wf-frame {
+  width: 100%;
+  max-width: 880px;
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 48px;
+  padding: 36px 44px 38px;
+  position: relative;
+  border: 1px solid var(--c12);
+  background:
+    linear-gradient(180deg, rgba(244,239,227,0.025) 0%, rgba(244,239,227,0.008) 100%);
+  border-radius: 4px;
+  align-items: center;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+}
+.wf-frame-tag {
+  position: absolute;
+  top: -10px; left: 30px;
+  background: var(--black);
+  padding: 0 14px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--paper);
+}
+.wf-frame-no {
+  position: absolute;
+  top: -10px; right: 30px;
+  background: var(--black);
+  padding: 0 14px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  color: var(--c40);
+}
+.wf-mascot {
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+}
+.wf-mascot svg {
+  width: 100%;
+  max-width: 150px;
+  filter: drop-shadow(0 16px 30px rgba(0,0,0,0.5));
+  animation: floaty 5s ease-in-out infinite;
+}
+.wf-mascot::after {
+  content: ''; position: absolute;
+  bottom: 6%; left: 25%;
+  width: 50%; height: 12px;
+  background: radial-gradient(ellipse, rgba(0,0,0,0.6) 0%, transparent 70%);
+  filter: blur(8px);
+}
+.wf-text { display: flex; flex-direction: column; min-width: 0; }
+.wf-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--c80);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.wf-num::before { content: ''; width: 22px; height: 1px; background: var(--c80); }
+.wf-title {
+  font-family: var(--display);
+  font-size: clamp(32px, 3.6vw, 54px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  font-weight: 350;
+  margin-bottom: 22px;
+  color: var(--paper);
+}
+.wf-title em { font-style: italic; opacity: 0.7; }
+.wf-desc {
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--c80);
+  max-width: 440px;
+  margin-bottom: 22px;
+}
+.wf-detail {
+  background: rgba(244,239,227,0.04);
+  border: 1px solid var(--c12);
+  border-radius: 2px;
+  padding: 14px 18px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--c60);
+  max-width: 380px;
+}
+.wf-detail .row {
+  display: flex; justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px dashed var(--c12);
+}
+.wf-detail .row:last-child { border: 0; }
+.wf-detail .k {
+  color: var(--c40);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 9px;
+}
+.wf-detail .v { color: var(--paper); }
+.wf-detail .v.ok { color: var(--paper); }
+.wf-handnote {
+  font-family: var(--hand);
+  font-size: 19px;
+  color: var(--paper);
+  margin-top: 16px;
+}
+
+/* DAW timeline */
+.wf-timeline {
+  padding: 26px 6vw 0;
+  border-top: 1px solid var(--c12);
+  position: relative;
+  z-index: 3;
+}
+.wf-tl-row {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c40);
+  margin-bottom: 12px;
+}
+.wf-tl-row .now {
+  color: var(--paper);
+  display: flex; align-items: center; gap: 6px;
+}
+.wf-tl-row .now::before {
+  content: ''; width: 5px; height: 5px;
+  background: var(--paper); border-radius: 50%;
+  animation: pre-blink 1.4s infinite;
+}
+.wf-stems {
+  display: flex; gap: 18px;
+  margin-bottom: 14px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.wf-stem {
+  display: flex; align-items: center; gap: 6px;
+  color: var(--c40);
+  transition: color 0.5s var(--ease);
+}
+.wf-stem.on { color: var(--paper); }
+.wf-stem .stem-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+.wf-stem.on .stem-dot { box-shadow: 0 0 6px rgba(244,239,227,0.6); }
+
+.wf-wave {
+  position: relative;
+  height: 36px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  overflow: hidden;
+}
+.wf-wave-bar {
+  width: 2px;
+  background: var(--paper);
+  border-radius: 1px;
+  opacity: 0.5;
+  transition: height 0.15s ease, opacity 0.15s;
+  flex: 1;
+}
+
+.wf-track { position: relative; height: 28px; display: flex; align-items: center; }
+.wf-line { position: absolute; left: 0; right: 0; height: 1px; background: var(--c12); }
+.wf-fill {
+  position: absolute;
+  left: 0; height: 1px;
+  background: var(--paper);
+  width: 0;
+  box-shadow: 0 0 8px rgba(244,239,227,0.3);
+}
+.wf-mk {
+  position: absolute;
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 1.5px solid var(--c40);
+  background: var(--black);
+  transform: translate(-50%, -50%);
+  top: 50%;
+  transition: all 0.5s var(--ease);
+}
+.wf-mk.on {
+  background: var(--paper);
+  border-color: var(--paper);
+  box-shadow: 0 0 0 4px rgba(244,239,227,0.20), 0 0 12px rgba(244,239,227,0.4);
+}
+.wf-mk.passed { background: var(--c80); border-color: var(--c80); }
+.wf-mk-label {
+  position: absolute;
+  top: 22px; left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c40);
+  white-space: nowrap;
+  transition: color 0.5s;
+}
+.wf-mk.on .wf-mk-label, .wf-mk.passed .wf-mk-label { color: var(--paper); }
+.wf-play {
+  position: absolute;
+  top: 50%;
+  width: 2px; height: 28px;
+  background: var(--paper);
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+.wf-play::after {
+  content: ''; position: absolute;
+  top: -7px; left: 50%;
+  width: 10px; height: 10px;
+  background: var(--paper);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  box-shadow: 0 0 12px rgba(244,239,227,0.4);
+}
+
+/* ════════════════ SHOWCASE (white) — real portfolio ════════════════ */
+.showcase {
+  position: relative;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 200px 40px 220px;
+  z-index: 10;
+  overflow: hidden;
+}
+.showcase-head {
+  position: relative; z-index: 2;
+  text-align: center;
+  max-width: 800px;
+  margin: 0 auto 100px;
+}
+.showcase-head .section-tag { justify-content: center; color: var(--i60); }
+.showcase h2 {
+  font-family: var(--display);
+  font-size: clamp(56px, 7vw, 110px);
+  line-height: 1.0;
+  letter-spacing: -0.025em;
+  font-weight: 350;
+  color: var(--ink);
+  margin-bottom: 30px;
+}
+.showcase h2 em { font-style: italic; }
+.showcase-sub {
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--i80);
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.showcase-grid {
+  position: relative; z-index: 2;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+}
+.poly {
+  position: relative;
+  background: var(--paper);
+  padding: 14px 14px 60px;
+  border-radius: 2px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    0 30px 60px rgba(26,26,28,0.18),
+    0 12px 24px rgba(26,26,28,0.10);
+  transition: transform 0.5s var(--easef), box-shadow 0.5s var(--ease);
+  transform-origin: center bottom;
+}
+.poly:nth-child(1) { transform: rotate(-2deg); }
+.poly:nth-child(2) { transform: rotate(1deg); margin-top: -16px; }
+.poly:nth-child(3) { transform: rotate(-1deg); margin-top: 12px; }
+.poly:hover {
+  transform: rotate(0deg) translateY(-12px) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    0 50px 90px rgba(26,26,28,0.32),
+    0 16px 30px rgba(26,26,28,0.14);
+  z-index: 5;
+}
+.poly-inner {
+  width: 100%;
+  height: 280px;
+  background: var(--black);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 18px 20px;
+  font-family: var(--mono);
+}
+.poly-inner-grain {
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.85' numOctaves='3'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.06 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+.poly-inner-top {
+  display: flex; justify-content: space-between;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: var(--c60);
+  text-transform: uppercase;
+  z-index: 2;
+  position: relative;
+}
+.poly-inner-top .id { color: var(--paper); }
+.poly-inner-c {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 28px;
+  line-height: 1.10;
+  color: var(--paper);
+  z-index: 2;
+  position: relative;
+  font-weight: 400;
+}
+.poly-inner-c span {
+  display: block;
+  font-style: normal;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--c60);
+  margin-top: 6px;
+}
+.poly-inner-bot {
+  display: flex; justify-content: space-between;
+  align-items: end;
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  color: var(--c60);
+  text-transform: uppercase;
+  z-index: 2;
+  position: relative;
+}
+.poly-inner-bot .verified {
+  color: var(--paper);
+  display: flex; align-items: center; gap: 4px;
+}
+.poly-inner-bot .verified::before {
+  content: ''; width: 4px; height: 4px;
+  background: var(--paper); border-radius: 50%;
+}
+.poly-meta {
+  margin-top: 14px;
+  display: flex; justify-content: space-between;
+  align-items: center;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--i60);
+}
+.poly-cap {
+  font-family: var(--hand);
+  font-size: 18px;
+  color: var(--ink);
+  margin-top: 4px;
+}
+
+.showcase-mascot {
+  position: absolute;
+  bottom: 80px; right: 60px;
+  width: 64px; height: 90px;
+  z-index: 2;
+  animation: floaty 6s ease-in-out infinite;
+  transform: rotate(8deg);
+}
+.showcase-mascot-note {
+  position: absolute;
+  bottom: 110px; right: 150px;
+  font-family: var(--hand);
+  font-size: 22px;
+  color: var(--ink);
+  z-index: 2;
+}
+
+/* ════════════════ THE SEAL — vinyl turntable (black) ════════════════ */
+.seal {
+  position: relative;
+  background: var(--black);
+  color: var(--paper);
+  padding: 200px 40px 220px;
+  text-align: center;
+  z-index: 10;
+  overflow: hidden;
+}
+.seal::before {
+  content: ''; position: absolute;
+  bottom: -200px; left: 50%;
+  transform: translateX(-50%);
+  width: 900px; height: 900px;
+  background: radial-gradient(circle, rgba(244,239,227,0.10) 0%, transparent 60%);
+  pointer-events: none; z-index: 1;
+  animation: glowpulse 8s ease-in-out infinite;
+}
+.seal > * { position: relative; z-index: 2; }
+.seal .section-tag { justify-content: center; color: var(--c60); }
+.seal h2 {
+  font-family: var(--display);
+  font-size: clamp(52px, 6.5vw, 100px);
+  line-height: 1.06;
+  letter-spacing: -0.025em;
+  font-weight: 350;
+  color: var(--paper);
+  margin-bottom: 38px;
+}
+.seal h2 em { font-style: italic; opacity: 0.7; }
+.seal-p {
+  font-size: 17px;
+  line-height: 1.65;
+  color: var(--c80);
+  max-width: 560px;
+  margin: 0 auto 80px;
+}
+.seal-p em { font-family: var(--display); font-style: italic; color: var(--paper); }
+
+.turntable-stage {
+  position: relative;
+  width: 480px; height: 380px;
+  margin: 0 auto;
+  display: flex; align-items: center; justify-content: center;
+}
+.tt-base {
+  position: absolute;
+  width: 380px; height: 320px;
+  background: var(--paper-2);
+  border-radius: 8px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.6),
+    inset 0 -2px 6px rgba(26,26,28,0.10),
+    0 60px 120px rgba(0,0,0,0.6),
+    0 20px 40px rgba(0,0,0,0.4),
+    0 0 0 1px rgba(244,239,227,0.06);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 30px;
+  overflow: hidden;
+}
+.tt-base::before {
+  content: ''; position: absolute;
+  bottom: 18px; left: 30px;
+  width: 130px; height: 16px;
+  background: var(--ink);
+  border-radius: 2px;
+}
+.tt-base::after {
+  content: 'SESSIONLEDGER · TT-1';
+  position: absolute;
+  bottom: 22px; left: 38px;
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.18em;
+  color: var(--paper);
+  z-index: 3;
+}
+.tt-platter-wrap {
+  position: relative;
+  width: 240px; height: 240px;
+  border-radius: 50%;
+  background: var(--ink);
+  box-shadow:
+    inset 0 0 0 6px var(--black-3),
+    inset 0 0 30px rgba(0,0,0,0.5),
+    0 8px 16px rgba(26,26,28,0.18);
+  display: flex; align-items: center; justify-content: center;
+  cursor: none;
+  z-index: 1;
+}
+.tt-vinyl {
+  width: 95%; height: 95%;
+  border-radius: 50%;
+  background:
+    repeating-radial-gradient(circle at center, var(--ink) 0px, var(--ink) 1.5px, var(--black-3) 1.5px, var(--black-3) 2px),
+    var(--ink);
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform 0.6s var(--ease);
+}
+.tt-vinyl.spinning { animation: vinyl-spin 4s linear infinite; }
+.tt-label {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--paper);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  font-family: var(--mono);
+  font-size: 7px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-align: center;
+  line-height: 1.4;
+  padding: 8px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+}
+.tt-label::before {
+  content: ''; position: absolute;
+  width: 6px; height: 6px;
+  background: var(--ink);
+  border-radius: 50%;
+  border: 1px solid var(--paper);
+}
+.tt-label-em {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+  margin-top: 14px;
+  margin-bottom: 4px;
+}
+.tt-arm-wrap {
+  position: absolute;
+  top: 30px; right: 30px;
+  width: 32px; height: 32px;
+  z-index: 2;
+}
+.tt-arm-base {
+  position: absolute;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--paper-3);
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.10);
+  display: flex; align-items: center; justify-content: center;
+}
+.tt-arm-base::after {
+  content: ''; width: 8px; height: 8px;
+  border-radius: 50%; background: var(--ink-2);
+}
+.tt-arm {
+  position: absolute;
+  top: 16px; left: 16px;
+  width: 200px; height: 5px;
+  background: linear-gradient(to right, var(--paper-3) 0%, var(--paper-3) 86%, var(--ink) 86%);
+  border-radius: 3px;
+  transform-origin: left center;
+  transform: rotate(-30deg);
+  transition: transform 1.1s var(--ease);
+  z-index: 3;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+}
+.tt-arm.engaged { transform: rotate(20deg); }
+.tt-arm::after {
+  content: ''; position: absolute;
+  right: -3px; top: 1px;
+  width: 8px; height: 16px;
+  background: var(--ink);
+  border-radius: 0 2px 2px 0;
+  clip-path: polygon(0 0, 100% 30%, 100% 70%, 0 100%);
+}
+
+.tt-dust {
+  position: absolute;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--paper);
+  pointer-events: none;
+  opacity: 0;
+}
+.tt-wave {
+  position: absolute;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  border: 1px solid var(--paper);
+  transform: translate(-50%, -50%) scale(0.5);
+  pointer-events: none;
+  left: 50%; top: 50%;
+  opacity: 0;
+  z-index: 1;
+}
+
+.seal-hint {
+  margin-top: 60px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--paper);
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+}
+.seal-hint::before, .seal-hint::after {
+  content: ''; width: 32px; height: 1px; background: var(--paper);
+}
+.seal-counter {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--c40);
+  margin-top: 14px;
+}
+.seal-counter strong { color: var(--paper); font-weight: 500; }
+.seal-imprint {
+  margin-top: 32px;
+  display: inline-block;
+  background: rgba(244,239,227,0.04);
+  border: 1px solid var(--c25);
+  padding: 14px 22px;
+  font-family: var(--mono);
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--c60);
+  text-align: left;
+  border-radius: 2px;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
+}
+.seal-imprint.shown { opacity: 1; transform: translateY(0); }
+.seal-imprint .ok {
+  color: var(--paper);
+  display: flex; align-items: center; gap: 8px;
+  text-transform: uppercase; letter-spacing: 0.2em;
+  font-size: 9px;
+  margin-bottom: 4px;
+}
+.seal-imprint .ok::before {
+  content: ''; width: 6px; height: 6px;
+  background: var(--paper); border-radius: 50%;
+}
+
+.seal-rec {
+  position: absolute;
+  bottom: 80px; right: 80px;
+  width: 70px; height: 100px;
+  z-index: 2;
+  filter: drop-shadow(0 8px 20px rgba(244,239,227,0.15));
+  animation: seal-bop 1.2s ease-in-out infinite;
+}
+@keyframes seal-bop {
+  0%,100% { transform: translateY(0) rotate(-2deg); }
+  50%     { transform: translateY(-4px) rotate(2deg); }
+}
+.seal-rec-note {
+  position: absolute;
+  bottom: 92px; right: 170px;
+  font-family: var(--hand);
+  font-size: 18px;
+  color: var(--paper);
+  z-index: 2;
+}
+
+/* ════════════════ WHO IT'S FOR (white) ════════════════ */
+.who {
+  position: relative;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 200px 40px 220px;
+  z-index: 10;
+  overflow: hidden;
+}
+.who-head {
+  position: relative; z-index: 2;
+  max-width: 1280px;
+  margin: 0 auto 90px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: end;
+}
+.who-head .section-tag { color: var(--i60); }
+.who h2 {
+  font-family: var(--display);
+  font-size: clamp(56px, 7vw, 110px);
+  line-height: 1.0;
+  letter-spacing: -0.025em;
+  font-weight: 350;
+  color: var(--ink);
+}
+.who h2 em { font-style: italic; }
+.who-sub {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--i80);
+  max-width: 480px;
+}
+.who-sub em { font-family: var(--display); font-style: italic; color: var(--ink); }
+
+.who-grid {
+  position: relative; z-index: 2;
+  max-width: 1280px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 40px;
+}
+.who-card {
+  background: var(--paper-2);
+  border: 1px solid var(--i12);
+  border-radius: 4px;
+  padding: 32px 30px 36px;
+  position: relative;
+  transition: transform 0.4s var(--ease), box-shadow 0.4s var(--ease);
+  overflow: hidden;
+}
+.who-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 30px 60px rgba(26,26,28,0.18);
+}
+.who-card-head {
+  display: flex; justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 14px;
+  border-bottom: 1px dashed var(--i20);
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.who-card-num {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.who-card-tag { color: var(--i60); }
+.who-card h3 {
+  font-family: var(--display);
+  font-size: 32px;
+  line-height: 1.1;
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+.who-card p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--i80);
+  margin-bottom: 20px;
+}
+.who-card-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 20px;
+  border-top: 1px dashed var(--i20);
+  padding-top: 16px;
+}
+.who-card-list li {
+  display: flex; align-items: center; gap: 10px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--i60);
+  padding: 6px 0;
+  text-transform: uppercase;
+}
+.who-card-list li::before {
+  content: ''; width: 5px; height: 5px;
+  background: var(--ink); border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.who-mascot {
+  position: absolute;
+  top: 100px; right: 60px;
+  width: 70px; height: 100px;
+  z-index: 3;
+  animation: floaty 6s ease-in-out infinite;
+}
+
+/* ════════════════ MANIFESTO (black) ════════════════ */
+.manifesto {
+  position: relative;
+  background: var(--black);
+  color: var(--paper);
+  padding: 200px 40px 200px;
+  z-index: 10;
+  overflow: hidden;
+}
+.manifesto::before {
+  content: ''; position: absolute;
+  top: 50%; right: 15%;
+  transform: translateY(-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(244,239,227,0.08) 0%, transparent 60%);
+  pointer-events: none; z-index: 1;
+  animation: glowpulse 7s ease-in-out infinite;
+}
+.mf-inner {
+  position: relative; z-index: 2;
+  max-width: 1400px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 80px;
+  align-items: center;
+  width: 100%;
+}
+.mf-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--c60);
+  margin-bottom: 36px;
+}
+.mf-h {
+  font-family: var(--display);
+  font-size: clamp(48px, 6vw, 92px);
+  line-height: 1.10;
+  letter-spacing: -0.025em;
+  font-weight: 350;
+  color: var(--paper);
+}
+.mf-h em { font-style: italic; opacity: 0.7; }
+.mf-mascot {
+  width: 220px;
+  filter: drop-shadow(0 20px 40px rgba(244,239,227,0.20));
+  animation: floaty 6s ease-in-out infinite;
+}
+
+/* ════════════════ FINAL CTA (white) ════════════════ */
+.final {
+  position: relative;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 220px 40px 180px;
+  z-index: 10;
+  overflow: hidden;
+  text-align: center;
+}
+.final-h {
+  font-family: var(--display);
+  font-size: clamp(64px, 9vw, 160px);
+  line-height: 0.96;
+  letter-spacing: -0.03em;
+  font-weight: 350;
+  color: var(--ink);
+  margin-bottom: 50px;
+  position: relative;
+  z-index: 2;
+}
+.final-h em { font-style: italic; }
+.final-sub {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--i80);
+  max-width: 540px;
+  margin: 0 auto 60px;
+  position: relative;
+  z-index: 2;
+}
+.final-sub em { font-family: var(--display); font-style: italic; }
+.final-cta-row {
+  display: flex; justify-content: center; gap: 16px;
+  position: relative; z-index: 2;
+  flex-wrap: wrap;
+}
+.final-cta {
+  display: inline-flex;
+  align-items: center; gap: 14px;
+  padding: 18px 32px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 100px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.4s var(--ease);
+  border: 1px solid var(--ink);
+}
+.final-cta.ghost {
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--ink);
+}
+.final-cta:hover { transform: translateY(-2px); }
+.final-cta .arr { transition: transform 0.4s var(--ease); }
+.final-cta:hover .arr { transform: translateX(3px); }
+
+.final-mascot {
+  position: absolute;
+  bottom: 60px; left: 50%;
+  transform: translateX(-50%);
+  width: 80px; height: 110px;
+  z-index: 2;
+  animation: floaty 5s ease-in-out infinite;
+}
+
+/* ════════════════ FOOTER ════════════════ */
+.foot {
+  position: relative;
+  background: var(--black);
+  border-top: 1px solid var(--c12);
+  padding: 80px 40px 50px;
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 60px;
+  z-index: 10;
+}
+.foot-col h4 {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--c40);
+  margin-bottom: 18px;
+}
+.foot-col ul { list-style: none; }
+.foot-col ul li { padding: 5px 0; }
+.foot-col ul a {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--c80);
+  transition: color 0.3s;
+}
+.foot-col ul a:hover { color: var(--paper); }
+.foot-brand {
+  font-family: var(--display);
+  font-size: 32px;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  color: var(--paper);
+  margin-bottom: 20px;
+}
+.foot-brand em { font-style: italic; color: var(--c60); }
+.foot-quote {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.4;
+  color: var(--c60);
+  max-width: 380px;
+  margin-bottom: 28px;
+}
+.foot-quote em { color: var(--paper); }
+.foot-vinyl {
+  width: 50px; height: 50px;
+  animation: vinyl-spin 8s linear infinite;
+  color: var(--c60);
+}
+.foot-bot {
+  grid-column: 1 / -1;
+  margin-top: 70px;
+  padding-top: 28px;
+  border-top: 1px solid var(--c12);
+  display: flex; justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: var(--c40);
+}
+
+/* ════════════════ REVEAL ════════════════ */
+.reveal { opacity: 0; transform: translateY(28px); transition: opacity 1s var(--ease), transform 1s var(--ease); }
+.reveal.in { opacity: 1; transform: translateY(0); }
+.reveal-d1 { transition-delay: 0.1s; }
+.reveal-d2 { transition-delay: 0.2s; }
+.reveal-d3 { transition-delay: 0.3s; }
+.reveal-d4 { transition-delay: 0.4s; }
+.reveal-d5 { transition-delay: 0.5s; }
+
+@media (max-width: 980px) {
+  body { cursor: auto; }
+  a, button { cursor: pointer; }
+  .cur-dot, .note-trail, .hero-peek { display: none; }
+  .nav { padding: 14px 18px; grid-template-columns: 1fr auto; top: 0; }
+  .nav-mid, .signin { display: none; }
+  .problem, .anatomy, .seal, .showcase, .who, .manifesto, .final { padding: 120px 24px; }
+  .problem-cards, .an-grid, .who-head { grid-template-columns: 1fr; gap: 50px; }
+  .showcase-grid, .who-grid { grid-template-columns: 1fr; }
+  .poly { transform: rotate(0) !important; margin: 0 !important; }
+  .problem-mascot, .problem-mascot-note, .an-rec-corner, .an-rec-corner-note,
+  .showcase-mascot, .showcase-mascot-note, .seal-rec, .seal-rec-note, .who-mascot,
+  .final-mascot { display: none; }
+  .wf { height: auto; }
+  .wf-sticky { position: relative; height: auto; padding: 60px 0; }
+  .wf-stage { width: 100%; flex-direction: column; }
+  .wf-step { width: 100%; padding: 30px 6vw; flex: 0 0 auto; }
+  .wf-frame { grid-template-columns: 1fr; gap: 30px; padding: 40px 30px; }
+  .wf-stage-wrap { overflow: visible; }
+  .wf-timeline { display: none; }
+  .turntable-stage { width: 100%; max-width: 380px; height: 320px; }
+  .tt-base { width: 320px; height: 270px; }
+  .tt-platter-wrap { width: 200px; height: 200px; }
+  .mf-inner { grid-template-columns: 1fr; }
+  .mf-mascot { width: 140px; }
+  .foot { grid-template-columns: 1fr 1fr; gap: 40px; }
+}
+</style>
+</head>
+<body>
+
+<svg style="display:none" aria-hidden="true">
+  <defs>
+    <filter id="rgh"  x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="5"/>
+      <feDisplacementMap in="SourceGraphic" scale="2.2"/>
+    </filter>
+    <filter id="rgh2" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="2" seed="9"/>
+      <feDisplacementMap in="SourceGraphic" scale="2.4"/>
+    </filter>
+    <filter id="rghs" x="-5%" y="-5%" width="110%" height="110%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="1" seed="13"/>
+      <feDisplacementMap in="SourceGraphic" scale="1"/>
+    </filter>
+
+    <!-- BODY (light bg) -->
+    <symbol id="body-l" viewBox="0 0 100 150">
+      <g filter="url(#rgh)">
+        <path d="M 19,22 Q 17,20 21,18 L 81,18 Q 85,18 86,21 Q 87,80 88,134 Q 88,138 84,138 L 16,139 Q 12,139 12,135 Q 13,80 14,21 Q 14,19 19,22 Z"
+              fill="#F4EFE3" stroke="#1A1A1C" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 16,28 Q 30,25 42,28 T 66,27 T 86,27" fill="none" stroke="#1A1A1C" stroke-width="1.1" opacity="0.4"/>
+        <path d="M 14,134 Q 30,131 44,134 T 70,133 T 88,133" fill="none" stroke="#1A1A1C" stroke-width="1.1" opacity="0.35"/>
+      </g>
+      <text x="50" y="11" text-anchor="middle" font-family="GT Pressura Mono" font-size="4.5" letter-spacing="1.4" fill="#1A1A1C" font-weight="600">REC · 001</text>
+      <g filter="url(#rgh2)" stroke="#1A1A1C" stroke-width="2" stroke-linecap="round" fill="none">
+        <path d="M 14,90 Q 4,96 6,112"/>
+        <path d="M 86,90 Q 96,96 94,112"/>
+        <path d="M 38,138 L 36,150"/>
+        <path d="M 62,138 L 64,150"/>
+        <path d="M 28,150 L 44,150"/>
+        <path d="M 56,150 L 72,150"/>
+      </g>
+    </symbol>
+
+    <!-- BODY (dark bg) -->
+    <symbol id="body-d" viewBox="0 0 100 150">
+      <g filter="url(#rgh)">
+        <path d="M 19,22 Q 17,20 21,18 L 81,18 Q 85,18 86,21 Q 87,80 88,134 Q 88,138 84,138 L 16,139 Q 12,139 12,135 Q 13,80 14,21 Q 14,19 19,22 Z"
+              fill="#1B1B1F" stroke="#F4EFE3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M 16,28 Q 30,25 42,28 T 66,27 T 86,27" fill="none" stroke="#F4EFE3" stroke-width="1" opacity="0.45"/>
+        <path d="M 14,134 Q 30,131 44,134 T 70,133 T 88,133" fill="none" stroke="#F4EFE3" stroke-width="1" opacity="0.4"/>
+      </g>
+      <text x="50" y="11" text-anchor="middle" font-family="GT Pressura Mono" font-size="4.5" letter-spacing="1.4" fill="#F4EFE3" font-weight="600">REC · 001</text>
+      <g filter="url(#rgh2)" stroke="#F4EFE3" stroke-width="2" stroke-linecap="round" fill="none">
+        <path d="M 14,90 Q 4,96 6,112"/>
+        <path d="M 86,90 Q 96,96 94,112"/>
+        <path d="M 38,138 L 36,150"/>
+        <path d="M 62,138 L 64,150"/>
+        <path d="M 28,150 L 44,150"/>
+        <path d="M 56,150 L 72,150"/>
+      </g>
+    </symbol>
+
+    <!-- ─── FACE LIBRARY (10 moods) ─── -->
+
+    <!-- IDLE — chill default, dark bg -->
+    <symbol id="f-idle-d" viewBox="0 0 100 150">
+      <g filter="url(#rghs)" stroke="#F4EFE3" stroke-width="2.4" stroke-linecap="round" fill="none">
+        <path d="M 30,68 Q 36,63 42,68"/>
+        <path d="M 58,68 Q 64,63 70,68"/>
+        <path d="M 44,90 Q 50,93 56,90"/>
+      </g>
+      <circle cx="22" cy="80" r="5" fill="#E8B5A8" opacity="0.5"/>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="6.5" fill="#F4EFE3"/>
+        <path d="M 0,-3.3 L 1.1,-1.1 L 3.3,0 L 1.1,1.1 L 0,3.3 L -1.1,1.1 L -3.3,0 L -1.1,-1.1 Z" fill="#1A1A1C"/>
+      </g>
+    </symbol>
+
+    <!-- IDLE — light bg -->
+    <symbol id="f-idle-l" viewBox="0 0 100 150">
+      <g filter="url(#rghs)" stroke="#1A1A1C" stroke-width="2.5" stroke-linecap="round" fill="none">
+        <path d="M 30,68 Q 36,63 42,68"/>
+        <path d="M 58,68 Q 64,63 70,68"/>
+        <path d="M 44,90 Q 50,93 56,90"/>
+      </g>
+      <circle cx="22" cy="80" r="5" fill="#E8B5A8" opacity="0.5"/>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="6.5" fill="#1A1A1C"/>
+        <path d="M 0,-3.3 L 1.1,-1.1 L 3.3,0 L 1.1,1.1 L 0,3.3 L -1.1,1.1 L -3.3,0 L -1.1,-1.1 Z" fill="#F4EFE3"/>
+      </g>
+    </symbol>
+
+    <!-- LISTENING — eyes closed, headphones -->
+    <symbol id="f-listen-d" viewBox="0 0 100 150">
+      <g filter="url(#rghs)" stroke="#F4EFE3" stroke-width="2.4" stroke-linecap="round" fill="none">
+        <path d="M 28,68 Q 36,72 44,68"/>
+        <path d="M 56,68 Q 64,72 72,68"/>
+        <path d="M 44,90 Q 50,93 56,90"/>
+      </g>
+      <!-- headphones -->
+      <g stroke="#F4EFE3" stroke-width="2" stroke-linecap="round" fill="none">
+        <path d="M 18,55 Q 18,30 50,30 Q 82,30 82,55"/>
+      </g>
+      <ellipse cx="14" cy="62" rx="6" ry="9" fill="#F4EFE3"/>
+      <ellipse cx="86" cy="62" rx="6" ry="9" fill="#F4EFE3"/>
+      <ellipse cx="14" cy="62" rx="3" ry="5" fill="#1A1A1C"/>
+      <ellipse cx="86" cy="62" rx="3" ry="5" fill="#1A1A1C"/>
+      <circle cx="22" cy="80" r="5" fill="#E8B5A8" opacity="0.5"/>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="6.5" fill="#F4EFE3"/>
+        <path d="M 0,-3.3 L 1.1,-1.1 L 3.3,0 L 1.1,1.1 L 0,3.3 L -1.1,1.1 L -3.3,0 L -1.1,-1.1 Z" fill="#1A1A1C"/>
+      </g>
+    </symbol>
+
+    <!-- WAVING — hi! (open eyes) -->
+    <symbol id="f-wave-l" viewBox="0 0 100 150">
+      <circle filter="url(#rghs)" cx="36" cy="64" r="4.5" fill="#1A1A1C"/>
+      <circle filter="url(#rghs)" cx="64" cy="64" r="4.5" fill="#1A1A1C"/>
+      <g filter="url(#rghs)" stroke="#1A1A1C" stroke-width="2.4" stroke-linecap="round" fill="none">
+        <path d="M 38,88 Q 50,96 62,88"/>
+      </g>
+      <circle cx="22" cy="78" r="5" fill="#E8B5A8" opacity="0.55"/>
+      <circle cx="78" cy="78" r="5" fill="#E8B5A8" opacity="0.55"/>
+      <!-- waving hand replaces right arm -->
+      <g stroke="#1A1A1C" stroke-width="2" stroke-linecap="round" fill="none">
+        <path d="M 86,90 Q 96,82 104,68"/>
+      </g>
+      <circle cx="106" cy="64" r="3.2" fill="#1A1A1C"/>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="6.5" fill="#1A1A1C"/>
+        <path d="M 0,-3.3 L 1.1,-1.1 L 3.3,0 L 1.1,1.1 L 0,3.3 L -1.1,1.1 L -3.3,0 L -1.1,-1.1 Z" fill="#F4EFE3"/>
+      </g>
+    </symbol>
+
+    <!-- WAVING — hi! (dark bg version, white eyes) -->
+    <symbol id="f-wave-d" viewBox="0 0 100 150">
+      <circle filter="url(#rghs)" cx="36" cy="64" r="4.5" fill="#F4EFE3"/>
+      <circle filter="url(#rghs)" cx="64" cy="64" r="4.5" fill="#F4EFE3"/>
+      <g filter="url(#rghs)" stroke="#F4EFE3" stroke-width="2.4" stroke-linecap="round" fill="none">
+        <path d="M 38,88 Q 50,96 62,88"/>
+      </g>
+      <circle cx="22" cy="78" r="5" fill="#E8B5A8" opacity="0.55"/>
+      <circle cx="78" cy="78" r="5" fill="#E8B5A8" opacity="0.55"/>
+      <g stroke="#F4EFE3" stroke-width="2" stroke-linecap="round" fill="none">
+        <path d="M 86,90 Q 96,82 104,68"/>
+      </g>
+      <circle cx="106" cy="64" r="3.2" fill="#F4EFE3"/>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="7" fill="#F4EFE3"/>
+        <path d="M 0,-3.5 L 1.2,-1.2 L 3.5,0 L 1.2,1.2 L 0,3.5 L -1.2,1.2 L -3.5,0 L -1.2,-1.2 Z" fill="#1A1A1C"/>
+      </g>
+    </symbol>
+
+    <!-- RECORDING -->
+    <symbol id="f-rec-d" viewBox="0 0 100 150">
+      <g filter="url(#rghs)" stroke="#F4EFE3" stroke-width="1.6" stroke-linecap="round" fill="none">
+        <path d="M 28,52 Q 36,48 44,52"/>
+        <path d="M 56,52 Q 64,48 72,52"/>
+      </g>
+      <circle filter="url(#rghs)" cx="36" cy="68" r="4" fill="#F4EFE3"/>
+      <circle filter="url(#rghs)" cx="64" cy="68" r="4" fill="#F4EFE3"/>
+      <ellipse filter="url(#rghs)" cx="50" cy="91" rx="3.5" ry="4.5" fill="#F4EFE3"/>
+      <circle cx="22" cy="42" r="2" fill="#F4EFE3"><animate attributeName="opacity" values="1;0.3;1" dur="1.5s" repeatCount="indefinite"/></circle>
+      <text x="28" y="44" font-family="GT Pressura Mono" font-size="4.5" font-weight="600" fill="#F4EFE3" letter-spacing="0.4">REC</text>
+      <circle cx="22" cy="80" r="5" fill="#E8B5A8" opacity="0.5"/>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="7" fill="#F4EFE3"/>
+        <path d="M 0,-3.5 L 1.2,-1.2 L 3.5,0 L 1.2,1.2 L 0,3.5 L -1.2,1.2 L -3.5,0 L -1.2,-1.2 Z" fill="#1A1A1C"/>
+      </g>
+    </symbol>
+
+    <!-- ASKING -->
+    <symbol id="f-ask-d" viewBox="0 0 100 150">
+      <g filter="url(#rghs)" stroke="#F4EFE3" stroke-width="1.6" stroke-linecap="round" fill="none">
+        <path d="M 28,52 Q 36,48 44,52"/>
+        <path d="M 56,52 Q 64,48 72,52"/>
+      </g>
+      <circle filter="url(#rghs)" cx="36" cy="62" r="4" fill="#F4EFE3"/>
+      <circle filter="url(#rghs)" cx="64" cy="62" r="4" fill="#F4EFE3"/>
+      <ellipse filter="url(#rghs)" cx="50" cy="92" rx="2" ry="2.5" fill="#F4EFE3"/>
+      <text x="78" y="46" font-family="Fraunces" font-size="22" font-style="italic" fill="#F4EFE3">?</text>
+      <circle cx="22" cy="80" r="5" fill="#E8B5A8" opacity="0.5"/>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="7" fill="#F4EFE3"/>
+        <path d="M 0,-3.5 L 1.2,-1.2 L 3.5,0 L 1.2,1.2 L 0,3.5 L -1.2,1.2 L -3.5,0 L -1.2,-1.2 Z" fill="#1A1A1C"/>
+      </g>
+    </symbol>
+
+    <symbol id="f-ask-l" viewBox="0 0 100 150">
+      <g filter="url(#rghs)" stroke="#1A1A1C" stroke-width="1.6" stroke-linecap="round" fill="none">
+        <path d="M 28,52 Q 36,48 44,52"/>
+        <path d="M 56,52 Q 64,48 72,52"/>
+      </g>
+      <circle filter="url(#rghs)" cx="36" cy="62" r="4" fill="#1A1A1C"/>
+      <circle filter="url(#rghs)" cx="64" cy="62" r="4" fill="#1A1A1C"/>
+      <ellipse filter="url(#rghs)" cx="50" cy="92" rx="2" ry="2.5" fill="#1A1A1C"/>
+      <text x="78" y="46" font-family="Fraunces" font-size="22" font-style="italic" fill="#1A1A1C">?</text>
+      <circle cx="22" cy="80" r="5" fill="#E8B5A8" opacity="0.5"/>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="6.5" fill="#1A1A1C"/>
+        <path d="M 0,-3.3 L 1.1,-1.1 L 3.3,0 L 1.1,1.1 L 0,3.3 L -1.1,1.1 L -3.3,0 L -1.1,-1.1 Z" fill="#F4EFE3"/>
+      </g>
+    </symbol>
+
+    <!-- WRITING -->
+    <symbol id="f-sign-d" viewBox="0 0 100 150">
+      <g filter="url(#rghs)" stroke="#F4EFE3" stroke-width="2.2" stroke-linecap="round" fill="none">
+        <path d="M 28,58 L 44,61"/>
+        <path d="M 56,61 L 72,58"/>
+        <path d="M 32,70 L 40,70"/>
+        <path d="M 60,70 L 68,70"/>
+      </g>
+      <path filter="url(#rghs)" d="M 44,90 Q 48,93 52,92 L 52,96 Q 50,97 48,96 Z" fill="#F4EFE3"/>
+      <line x1="92" y1="100" x2="106" y2="114" stroke="#F4EFE3" stroke-width="2.6" stroke-linecap="round"/>
+      <circle cx="106" cy="114" r="1.6" fill="#F4EFE3"/>
+      <circle cx="22" cy="80" r="5" fill="#E8B5A8" opacity="0.5"/>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="7" fill="#F4EFE3"/>
+        <path d="M 0,-3.5 L 1.2,-1.2 L 3.5,0 L 1.2,1.2 L 0,3.5 L -1.2,1.2 L -3.5,0 L -1.2,-1.2 Z" fill="#1A1A1C"/>
+      </g>
+    </symbol>
+
+    <!-- WAITING — clock z's -->
+    <symbol id="f-wait-d" viewBox="0 0 100 150">
+      <g filter="url(#rghs)" stroke="#F4EFE3" stroke-width="2.4" stroke-linecap="round" fill="none">
+        <path d="M 28,68 Q 36,72 44,68"/>
+        <path d="M 56,68 Q 64,72 72,68"/>
+        <line x1="40" y1="92" x2="60" y2="92"/>
+      </g>
+      <circle cx="22" cy="80" r="5" fill="#E8B5A8" opacity="0.5"/>
+      <text x="80" y="40" font-family="Fraunces" font-size="14" font-style="italic" fill="#F4EFE3" opacity="0.7">~</text>
+      <text x="86" y="32" font-family="Fraunces" font-size="11" font-style="italic" fill="#F4EFE3" opacity="0.5">~</text>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="7" fill="#F4EFE3"/>
+        <path d="M 0,-3.5 L 1.2,-1.2 L 3.5,0 L 1.2,1.2 L 0,3.5 L -1.2,1.2 L -3.5,0 L -1.2,-1.2 Z" fill="#1A1A1C"/>
+      </g>
+    </symbol>
+
+    <!-- VERIFIED — sparkles + seal -->
+    <symbol id="f-ver-d" viewBox="0 0 100 150">
+      <g filter="url(#rghs)" stroke="#F4EFE3" stroke-width="2.4" stroke-linecap="round" fill="none">
+        <path d="M 28,70 Q 36,63 44,70"/>
+        <path d="M 56,70 Q 64,63 72,70"/>
+        <path d="M 38,86 Q 50,96 62,86"/>
+      </g>
+      <g>
+        <path d="M 12,46 L 13.5,49 L 17,50 L 13.5,51 L 12,54 L 10.5,51 L 7,50 L 10.5,49 Z" fill="#F4EFE3"/>
+        <path d="M 86,52 L 87.5,55 L 91,56 L 87.5,57 L 86,60 L 84.5,57 L 81,56 L 84.5,55 Z" fill="#F4EFE3"/>
+        <path d="M 14,104 L 15,106.5 L 17.5,107.5 L 15,108.5 L 14,111 L 13,108.5 L 10.5,107.5 L 13,106.5 Z" fill="#F4EFE3"/>
+      </g>
+      <circle cx="22" cy="80" r="5" fill="#E8B5A8" opacity="0.5"/>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="10" fill="#F4EFE3"/>
+        <path d="M 0,-5 L 1.7,-1.7 L 5,0 L 1.7,1.7 L 0,5 L -1.7,1.7 L -5,0 L -1.7,-1.7 Z" fill="#1A1A1C"/>
+      </g>
+    </symbol>
+
+    <symbol id="f-ver-l" viewBox="0 0 100 150">
+      <g filter="url(#rghs)" stroke="#1A1A1C" stroke-width="2.4" stroke-linecap="round" fill="none">
+        <path d="M 28,70 Q 36,63 44,70"/>
+        <path d="M 56,70 Q 64,63 72,70"/>
+        <path d="M 38,86 Q 50,96 62,86"/>
+      </g>
+      <g>
+        <path d="M 12,46 L 13.5,49 L 17,50 L 13.5,51 L 12,54 L 10.5,51 L 7,50 L 10.5,49 Z" fill="#1A1A1C"/>
+        <path d="M 86,52 L 87.5,55 L 91,56 L 87.5,57 L 86,60 L 84.5,57 L 81,56 L 84.5,55 Z" fill="#1A1A1C"/>
+        <path d="M 14,104 L 15,106.5 L 17.5,107.5 L 15,108.5 L 14,111 L 13,108.5 L 10.5,107.5 L 13,106.5 Z" fill="#1A1A1C"/>
+      </g>
+      <circle cx="22" cy="80" r="5" fill="#E8B5A8" opacity="0.5"/>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="10" fill="#1A1A1C"/>
+        <path d="M 0,-5 L 1.7,-1.7 L 5,0 L 1.7,1.7 L 0,5 L -1.7,1.7 L -5,0 L -1.7,-1.7 Z" fill="#F4EFE3"/>
+      </g>
+    </symbol>
+
+    <!-- THINKING — chin tap, ? -->
+    <symbol id="f-think-l" viewBox="0 0 100 150">
+      <g filter="url(#rghs)" stroke="#1A1A1C" stroke-width="2.4" stroke-linecap="round" fill="none">
+        <path d="M 30,68 Q 36,63 42,68"/>
+        <path d="M 58,68 Q 64,63 70,68"/>
+        <path d="M 44,92 Q 50,90 56,92"/>
+      </g>
+      <circle cx="22" cy="80" r="5" fill="#E8B5A8" opacity="0.5"/>
+      <text x="74" y="44" font-family="Fraunces" font-size="20" font-style="italic" fill="#1A1A1C" opacity="0.7">·</text>
+      <text x="80" y="38" font-family="Fraunces" font-size="14" font-style="italic" fill="#1A1A1C" opacity="0.5">·</text>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="6.5" fill="#1A1A1C"/>
+        <path d="M 0,-3.3 L 1.1,-1.1 L 3.3,0 L 1.1,1.1 L 0,3.3 L -1.1,1.1 L -3.3,0 L -1.1,-1.1 Z" fill="#F4EFE3"/>
+      </g>
+    </symbol>
+
+    <!-- SLEEPY — z's -->
+    <symbol id="f-sleep-d" viewBox="0 0 100 150">
+      <g filter="url(#rghs)" stroke="#F4EFE3" stroke-width="2.4" stroke-linecap="round" fill="none">
+        <path d="M 28,68 Q 36,72 44,68"/>
+        <path d="M 56,68 Q 64,72 72,68"/>
+        <path d="M 44,92 Q 50,90 56,92"/>
+      </g>
+      <circle cx="22" cy="80" r="5" fill="#E8B5A8" opacity="0.6"/>
+      <text x="76" y="38" font-family="Fraunces" font-size="14" font-style="italic" fill="#F4EFE3" opacity="0.7">z</text>
+      <text x="84" y="28" font-family="Fraunces" font-size="11" font-style="italic" fill="#F4EFE3" opacity="0.5">z</text>
+      <g filter="url(#rghs)" transform="translate(50,108)">
+        <circle r="6.5" fill="#F4EFE3"/>
+        <path d="M 0,-3.3 L 1.1,-1.1 L 3.3,0 L 1.1,1.1 L 0,3.3 L -1.1,1.1 L -3.3,0 L -1.1,-1.1 Z" fill="#1A1A1C"/>
+      </g>
+    </symbol>
+
+    <!-- ─── MUSIC MOTIFS ─── -->
+
+    <symbol id="m-staff" viewBox="0 0 100 50">
+      <g stroke="currentColor" stroke-width="0.8" fill="none">
+        <line x1="0" y1="10" x2="100" y2="10"/>
+        <line x1="0" y1="18" x2="100" y2="18"/>
+        <line x1="0" y1="26" x2="100" y2="26"/>
+        <line x1="0" y1="34" x2="100" y2="34"/>
+        <line x1="0" y1="42" x2="100" y2="42"/>
+      </g>
+      <g fill="currentColor">
+        <ellipse cx="22" cy="26" rx="3.2" ry="2.4" transform="rotate(-15 22 26)"/>
+        <line x1="24.5" y1="25.5" x2="24.5" y2="10" stroke="currentColor" stroke-width="1"/>
+        <ellipse cx="50" cy="22" rx="3.2" ry="2.4" transform="rotate(-15 50 22)"/>
+        <line x1="52.5" y1="21.5" x2="52.5" y2="6" stroke="currentColor" stroke-width="1"/>
+        <ellipse cx="60" cy="26" rx="3.2" ry="2.4" transform="rotate(-15 60 26)"/>
+        <line x1="62.5" y1="25.5" x2="62.5" y2="10" stroke="currentColor" stroke-width="1"/>
+        <path d="M 24.5,10 Q 42,8 62.5,10" stroke="currentColor" stroke-width="1.6" fill="none"/>
+      </g>
+    </symbol>
+
+    <symbol id="m-cassette" viewBox="0 0 100 70">
+      <g stroke="currentColor" stroke-width="1.5" fill="none">
+        <rect x="5" y="5" width="90" height="60" rx="4"/>
+        <rect x="12" y="14" width="76" height="20" rx="2"/>
+        <line x1="20" y1="22" x2="80" y2="22" stroke-width="0.8" opacity="0.6"/>
+        <line x1="20" y1="28" x2="60" y2="28" stroke-width="0.8" opacity="0.6"/>
+        <circle cx="28" cy="48" r="9"/>
+        <circle cx="72" cy="48" r="9"/>
+        <circle cx="28" cy="48" r="3" fill="currentColor"/>
+        <circle cx="72" cy="48" r="3" fill="currentColor"/>
+      </g>
+    </symbol>
+
+    <symbol id="m-vinyl" viewBox="0 0 80 80">
+      <g stroke="currentColor" stroke-width="1.2" fill="none">
+        <circle cx="40" cy="40" r="36"/>
+        <circle cx="40" cy="40" r="30" opacity="0.5"/>
+        <circle cx="40" cy="40" r="24" opacity="0.4"/>
+        <circle cx="40" cy="40" r="18" opacity="0.3"/>
+        <circle cx="40" cy="40" r="12" fill="currentColor" stroke="none"/>
+        <circle cx="40" cy="40" r="3" fill="#0B0B0C" stroke="none"/>
+      </g>
+    </symbol>
+
+    <symbol id="m-notes" viewBox="0 0 50 80">
+      <g fill="currentColor">
+        <ellipse cx="14" cy="58" rx="6" ry="4.5" transform="rotate(-15 14 58)"/>
+        <line x1="19" y1="56" x2="19" y2="14" stroke="currentColor" stroke-width="2"/>
+        <ellipse cx="38" cy="50" rx="6" ry="4.5" transform="rotate(-15 38 50)"/>
+        <line x1="43" y1="48" x2="43" y2="6" stroke="currentColor" stroke-width="2"/>
+        <path d="M 19,14 Q 31,10 43,6 L 43,14 Q 31,18 19,22 Z"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ──────── LOADER ──────── -->
+<div class="pre" id="pre">
+  <svg class="pre-mascot" viewBox="0 0 100 150">
+    <use href="#body-l"/>
+    <g id="pre-face">
+      <use href="#f-listen-d"/>
+    </g>
+  </svg>
+  <div class="pre-text"><strong id="pre-msg">tuning the room</strong></div>
+  <div class="pre-tape">
+    <span class="pre-tape-dot" id="dot-0"></span>
+    <span class="pre-tape-dot" id="dot-1"></span>
+    <span class="pre-tape-dot" id="dot-2"></span>
+    <span class="pre-tape-dot" id="dot-3"></span>
+  </div>
+</div>
+
+<div class="tex-grain-fixed"></div>
+<div class="scroll-progress" id="scroll-progress"></div>
+
+<div class="cur-dot"></div>
+
+<!-- ──────── NAV ──────── -->
+<nav class="nav" id="nav">
+  <div class="nav-brand">
+    <span class="nav-brand-mark"></span>
+    <span>Session<em>Ledger</em></span>
+  </div>
+  <div class="nav-mid">
+    <a href="#problem" data-hover>Why</a>
+    <a href="#anatomy" data-hover>What it is</a>
+    <a href="#wf" data-hover>How it works</a>
+    <a href="#showcase" data-hover>Records</a>
+  </div>
+  <div class="nav-right">
+    <div class="lang">
+      <a class="on" data-hover>EN</a>
+      <span class="sep">/</span>
+      <a data-hover>中</a>
+    </div>
+    <a class="signin" data-hover href="/sign-in" target="_top">Sign in</a>
+    <a class="start-cta" data-hover href="/dashboard" target="_top">
+      <span>Start a record</span>
+      <span class="arr">→</span>
+    </a>
+  </div>
+</nav>
+
+<!-- ──────── HERO ──────── -->
+<section class="hero" id="hero">
+  <div class="hero-tex-1"></div>
+  <div class="hero-tex-2"></div>
+
+  <canvas id="ambient-canvas"></canvas>
+  <canvas id="hero-canvas"></canvas>
+
+  <div class="hero-cta-row">
+    <a class="cta-link" data-hover href="/dashboard" target="_top">
+      <span class="ic"></span>
+      <span>Start your first record</span>
+      <span class="arr">→</span>
+    </a>
+    <a class="cta-link ghost" data-hover href="#anatomy">
+      <span>See how it works</span>
+    </a>
+  </div>
+
+  <div class="scroll-hint">
+    <div class="scroll-hint-inner">
+      <span>scroll to begin</span>
+      <div class="scroll-line"></div>
+    </div>
+  </div>
+
+  <svg class="hero-peek" viewBox="0 0 100 150">
+    <use href="#body-l"/><use href="#f-wave-l"/>
+  </svg>
+</section>
+
+<!-- ──────── PROBLEM ──────── -->
+<section class="problem" id="problem">
+  <div class="tex-paper crumple"></div>
+
+  <div class="problem-head">
+    <div class="problem-pre reveal">— vol. 01 / chapter one</div>
+    <div class="section-tag reveal" style="color: var(--i60)">
+      <span>The problem</span>
+      <span class="num">001</span>
+    </div>
+    <h2 class="problem-h reveal reveal-d1">
+      <span class="problem-h-line">The work was real.</span>
+      <span class="problem-h-line">The <em>credit</em> wasn't.</span>
+    </h2>
+    <p class="problem-deck reveal reveal-d2">
+      Music is made by people, in rooms, with their hands. But the record of who actually showed up — who wrote the topline, who fixed the bridge, who stayed until 4am dialing in the bass — <em>that</em> record almost never survives the session.
+    </p>
+  </div>
+
+  <div class="problem-cards">
+    <div class="prob-card reveal reveal-d2">
+      <div class="prob-card-meta">
+        <span class="prob-card-n">i.</span>
+        <span class="prob-card-tag">The producer</span>
+      </div>
+      <h3 class="prob-card-h">Cut from the credits.</h3>
+      <p class="prob-card-p">Three people in the room. Two on the metadata. The third — the one whose drum pattern the song is built on — finds out months later, on Spotify.</p>
+    </div>
+    <div class="prob-card reveal reveal-d3">
+      <div class="prob-card-meta">
+        <span class="prob-card-n">ii.</span>
+        <span class="prob-card-tag">The topliner</span>
+      </div>
+      <h3 class="prob-card-h">No proof, no claim.</h3>
+      <p class="prob-card-p">She wrote the hook. There's a voice memo somewhere on her phone. When the song blows up six months later, she has nothing to show.</p>
+    </div>
+    <div class="prob-card reveal reveal-d4">
+      <div class="prob-card-meta">
+        <span class="prob-card-n">iii.</span>
+        <span class="prob-card-tag">The engineer</span>
+      </div>
+      <h3 class="prob-card-h">Forty records, no résumé.</h3>
+      <p class="prob-card-p">He's mixed forty records this year. None of them have his name attached anywhere a label or another artist can see.</p>
+    </div>
+  </div>
+
+  <svg class="problem-mascot" viewBox="0 0 100 150">
+    <use href="#body-l"/><use href="#f-think-l"/>
+  </svg>
+  <div class="problem-mascot-note">— "I've been there too."</div>
+</section>
+
+<!-- ──────── ANATOMY ──────── -->
+<section class="anatomy" id="anatomy">
+  <svg class="an-motif staff" viewBox="0 0 100 50"><use href="#m-staff"/></svg>
+  <svg class="an-motif cassette" viewBox="0 0 100 70"><use href="#m-cassette"/></svg>
+  <svg class="an-motif vinyl1" viewBox="0 0 80 80"><use href="#m-vinyl"/></svg>
+  <svg class="an-motif notes" viewBox="0 0 50 80"><use href="#m-notes"/></svg>
+
+  <div class="an-grid">
+    <div>
+      <div class="section-tag reveal">
+        <span>Anatomy of a record</span>
+        <span class="num">002</span>
+      </div>
+      <h2 class="an-h reveal reveal-d1">
+        <span class="an-h-line">Not a tag.</span>
+        <span class="an-h-line">An <em>artifact.</em></span>
+      </h2>
+      <p class="an-p reveal reveal-d2">
+        A SessionLedger record is a <strong>physical-feeling document</strong>
+        of one moment of music. It carries everything that happened — who
+        was there, who did what, what they agreed on, when it was sealed.
+      </p>
+      <p class="an-p reveal reveal-d3">
+        It looks like a polaroid, reads like a contract, and lives forever
+        on a public chain. Tilt the card. It moves with you.
+      </p>
+      <div class="an-hint reveal reveal-d4">tilt me · I respond to your cursor</div>
+    </div>
+    <div class="an-stage reveal reveal-d2" id="an-stage">
+      <div class="an-card" id="an-card">
+        <div class="an-card-window">
+          <div class="tex-paper"></div>
+          <div class="an-card-head">
+            <span class="id">REC · SL-7K2M-9XQ4</span>
+            <span class="light">● recording</span>
+          </div>
+          <div class="an-card-title">Untitled<br>(Chen / Ito session)</div>
+          <div class="an-card-when">2026-04-03 · 14:22 UTC · Studio K2 · Brooklyn</div>
+          <div class="an-card-roles">
+            <div class="role">
+              <div class="role-l">Lead vocal · Topline</div>
+              <div class="role-n">K. Chen</div>
+              <div class="role-pct">35%</div>
+            </div>
+            <div class="role">
+              <div class="role-l">Production</div>
+              <div class="role-n">M. Ito</div>
+              <div class="role-pct">30%</div>
+            </div>
+            <div class="role">
+              <div class="role-l">Mix · Master</div>
+              <div class="role-n">L. Brooks</div>
+              <div class="role-pct">25%</div>
+            </div>
+            <div class="role">
+              <div class="role-l">Studio · Room</div>
+              <div class="role-n">Studio K2</div>
+              <div class="role-pct">10%</div>
+            </div>
+          </div>
+          <div class="an-card-foot">
+            <div>
+              Hash · <span>0x4a8f...c721</span><br>
+              Sealed · <span>2026-04-03 14:48</span>
+            </div>
+            <div class="an-card-seal">
+              <svg viewBox="0 0 24 24">
+                <polygon points="12,4 18,9 16,16 8,16 6,9" fill="none" stroke="#1A1A1C" stroke-width="1.4"/>
+                <path d="M 12,9 L 13,11 L 15,12 L 13,13 L 12,15 L 11,13 L 9,12 L 11,11 Z" fill="#1A1A1C"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+        <div class="an-card-caption">untitled · chen / ito</div>
+      </div>
+    </div>
+  </div>
+
+  <svg class="an-rec-corner" viewBox="0 0 100 150">
+    <use href="#body-d"/><use href="#f-rec-d"/>
+  </svg>
+  <div class="an-rec-corner-note">— a session<br>in progress.</div>
+</section>
+
+<!-- ──────── WORKFLOW ──────── -->
+<section class="wf" id="wf">
+  <div class="wf-sticky">
+    <div class="wf-head">
+      <div class="section-tag">
+        <span>How it works · five steps</span>
+        <span class="num">003</span>
+      </div>
+      <h2>How a session<br><em>becomes</em> a record.</h2>
+    </div>
+
+    <div class="wf-stage-wrap">
+      <div class="wf-stage" id="wf-stage">
+
+        <div class="wf-step">
+          <div class="wf-frame">
+            <span class="wf-frame-tag">Step 01 of 05</span>
+            <span class="wf-frame-no">Capture</span>
+            <div class="wf-mascot">
+              <svg viewBox="0 0 100 150"><use href="#body-d"/><use href="#f-rec-d"/></svg>
+            </div>
+            <div class="wf-text">
+              <div class="wf-num">Capture · the moment</div>
+              <h3 class="wf-title">A session <em>happens.</em></h3>
+              <p class="wf-desc">
+                You start a record on your phone or laptop while the session
+                is still going. SessionLedger captures the metadata — date,
+                place, time, what you're working on — in seconds. No app to
+                install. No account to make for the room.
+              </p>
+              <div class="wf-detail">
+                <div class="row"><span class="k">Project</span><span class="v">Chen / Ito</span></div>
+                <div class="row"><span class="k">Date</span><span class="v">2026·04·03</span></div>
+                <div class="row"><span class="k">Status</span><span class="v ok">live · capturing</span></div>
+              </div>
+              <div class="wf-handnote">"a Tuesday in March, no studio name."</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wf-step">
+          <div class="wf-frame">
+            <span class="wf-frame-tag">Step 02 of 05</span>
+            <span class="wf-frame-no">Invite</span>
+            <div class="wf-mascot">
+              <svg viewBox="0 0 100 150"><use href="#body-d"/><use href="#f-ask-d"/></svg>
+            </div>
+            <div class="wf-text">
+              <div class="wf-num">Invite · the cast</div>
+              <h3 class="wf-title">Add the <em>cast.</em></h3>
+              <p class="wf-desc">
+                Email, handle, or just a name — invite everyone who showed up.
+                Each collaborator gets a one-tap confirmation link. They don't
+                need to sign up to confirm. It just works.
+              </p>
+              <div class="wf-detail">
+                <div class="row"><span class="k">K. Chen · vocals</span><span class="v ok">link sent</span></div>
+                <div class="row"><span class="k">M. Ito · prod</span><span class="v ok">link sent</span></div>
+                <div class="row"><span class="k">L. Brooks · mix</span><span class="v ok">link sent</span></div>
+              </div>
+              <div class="wf-handnote">"+ 3 others — Mei, Aki, Leo."</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wf-step">
+          <div class="wf-frame">
+            <span class="wf-frame-tag">Step 03 of 05</span>
+            <span class="wf-frame-no">Sign</span>
+            <div class="wf-mascot">
+              <svg viewBox="0 0 100 150"><use href="#body-d"/><use href="#f-sign-d"/></svg>
+            </div>
+            <div class="wf-text">
+              <div class="wf-num">Sign · the part you played</div>
+              <h3 class="wf-title">Sign your <em>part.</em></h3>
+              <p class="wf-desc">
+                Pick what you contributed from a list — topline, production,
+                vocals, mix, engineering — or write your own. Then sign with
+                finger or trackpad. Your contribution is in your words.
+              </p>
+              <div class="wf-detail">
+                <div class="row"><span class="k">Contribution</span><span class="v">co-write + topline</span></div>
+                <div class="row"><span class="k">Split %</span><span class="v">35</span></div>
+                <div class="row"><span class="k">Signature</span><span class="v ok">drawn ✓</span></div>
+              </div>
+              <div class="wf-handnote">"co-write + topline + vocal arrangement."</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wf-step">
+          <div class="wf-frame">
+            <span class="wf-frame-tag">Step 04 of 05</span>
+            <span class="wf-frame-no">Confirm</span>
+            <div class="wf-mascot">
+              <svg viewBox="0 0 100 150"><use href="#body-d"/><use href="#f-wait-d"/></svg>
+            </div>
+            <div class="wf-text">
+              <div class="wf-num">Confirm · everyone agrees</div>
+              <h3 class="wf-title">Co-signers <em>witness.</em></h3>
+              <p class="wf-desc">
+                Everyone you invited sees what you wrote, agrees or pushes back.
+                The record only seals when every person co-signs. Until then,
+                it's a draft — visible only to the room.
+              </p>
+              <div class="wf-detail">
+                <div class="row"><span class="k">K. Chen</span><span class="v ok">signed ✓</span></div>
+                <div class="row"><span class="k">M. Ito</span><span class="v ok">signed ✓</span></div>
+                <div class="row"><span class="k">L. Brooks</span><span class="v">awaiting...</span></div>
+              </div>
+              <div class="wf-handnote">"2 of 3 ✓ — Leo's still on tour."</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="wf-step">
+          <div class="wf-frame">
+            <span class="wf-frame-tag">Step 05 of 05</span>
+            <span class="wf-frame-no">Seal</span>
+            <div class="wf-mascot">
+              <svg viewBox="0 0 100 150"><use href="#body-d"/><use href="#f-ver-d"/></svg>
+            </div>
+            <div class="wf-text">
+              <div class="wf-num">Seal · forever, on record</div>
+              <h3 class="wf-title">Sealed, <em>forever.</em></h3>
+              <p class="wf-desc">
+                When the last signature lands, the record hashes onchain.
+                It's permanent, public, and yours. It joins your portfolio
+                — an evolving timeline of every session you've actually made.
+              </p>
+              <div class="wf-detail">
+                <div class="row"><span class="k">Hash</span><span class="v ok">0x4a8f...c721</span></div>
+                <div class="row"><span class="k">Block</span><span class="v">2,847,193</span></div>
+                <div class="row"><span class="k">Status</span><span class="v ok">sealed · permanent</span></div>
+              </div>
+              <div class="wf-handnote">"It's on the record now."</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="wf-timeline">
+      <div class="wf-tl-row">
+        <span>00:00</span>
+        <span class="now" id="wf-now">capture · 00:00</span>
+        <span>02:30</span>
+      </div>
+      <div class="wf-stems">
+        <span class="wf-stem on" data-s="0"><span class="stem-dot"></span>Capture</span>
+        <span class="wf-stem" data-s="1"><span class="stem-dot"></span>Invite</span>
+        <span class="wf-stem" data-s="2"><span class="stem-dot"></span>Sign</span>
+        <span class="wf-stem" data-s="3"><span class="stem-dot"></span>Confirm</span>
+        <span class="wf-stem" data-s="4"><span class="stem-dot"></span>Sealed</span>
+      </div>
+      <div class="wf-wave" id="wf-wave"></div>
+      <div class="wf-track">
+        <div class="wf-line"></div>
+        <div class="wf-fill" id="wf-fill"></div>
+        <div class="wf-mk on" data-mk="0" style="left:10%"><span class="wf-mk-label">01 · Capture</span></div>
+        <div class="wf-mk" data-mk="1" style="left:30%"><span class="wf-mk-label">02 · Invite</span></div>
+        <div class="wf-mk" data-mk="2" style="left:50%"><span class="wf-mk-label">03 · Sign</span></div>
+        <div class="wf-mk" data-mk="3" style="left:70%"><span class="wf-mk-label">04 · Confirm</span></div>
+        <div class="wf-mk" data-mk="4" style="left:90%"><span class="wf-mk-label">05 · Seal</span></div>
+        <div class="wf-play" id="wf-play" style="left:10%"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ──────── SHOWCASE — REAL PORTFOLIO ──────── -->
+<section class="showcase" id="showcase">
+  <div class="tex-paper crumple"></div>
+
+  <div class="showcase-head">
+    <div class="section-tag reveal" style="color: var(--i60)">
+      <span>What it looks like</span>
+      <span class="num">004</span>
+    </div>
+    <h2 class="reveal reveal-d1">A portfolio that <em>adds up.</em></h2>
+    <p class="showcase-sub reveal reveal-d2">
+      Every record you seal joins a public, permanent timeline of what you
+      actually made and who you made it with. Real records, real proof —
+      across years, across projects.
+    </p>
+  </div>
+
+  <div class="showcase-grid">
+    <div>
+      <div class="poly reveal reveal-d2" data-hover>
+        <div class="poly-inner">
+          <div class="poly-inner-grain"></div>
+          <div class="poly-inner-top">
+            <span class="id">SL-7K2M</span>
+            <span>04·03·26</span>
+          </div>
+          <div class="poly-inner-c">
+            Untitled
+            <span>Chen × Ito session · Studio K2</span>
+          </div>
+          <div class="poly-inner-bot">
+            <span>3 co-signers</span>
+            <span class="verified">verified</span>
+          </div>
+        </div>
+        <div class="poly-meta">
+          <span>Brooklyn · NY</span>
+          <span>0x4a8f...c721</span>
+        </div>
+        <div class="poly-cap">untitled · chen / ito</div>
+      </div>
+    </div>
+    <div>
+      <div class="poly reveal reveal-d3" data-hover>
+        <div class="poly-inner">
+          <div class="poly-inner-grain"></div>
+          <div class="poly-inner-top">
+            <span class="id">SL-9XQ4</span>
+            <span>03·19·26</span>
+          </div>
+          <div class="poly-inner-c">
+            Sleepwalk
+            <span>demo · v3 · home setup</span>
+          </div>
+          <div class="poly-inner-bot">
+            <span>4 co-signers</span>
+            <span class="verified">verified</span>
+          </div>
+        </div>
+        <div class="poly-meta">
+          <span>Hangzhou · CN</span>
+          <span>0x9f02...41a8</span>
+        </div>
+        <div class="poly-cap">sleepwalk demo</div>
+      </div>
+    </div>
+    <div>
+      <div class="poly reveal reveal-d4" data-hover>
+        <div class="poly-inner">
+          <div class="poly-inner-grain"></div>
+          <div class="poly-inner-top">
+            <span class="id">SL-3F1B</span>
+            <span>02·11·26</span>
+          </div>
+          <div class="poly-inner-c">
+            Honest Light
+            <span>co-write · final master</span>
+          </div>
+          <div class="poly-inner-bot">
+            <span>2 co-signers</span>
+            <span class="verified">verified</span>
+          </div>
+        </div>
+        <div class="poly-meta">
+          <span>Boston · MA</span>
+          <span>0x2c4d...88f1</span>
+        </div>
+        <div class="poly-cap">honest light · final</div>
+      </div>
+    </div>
+  </div>
+
+  <svg class="showcase-mascot" viewBox="0 0 100 150">
+    <use href="#body-l"/><use href="#f-ver-l"/>
+  </svg>
+  <div class="showcase-mascot-note">— "twelve and counting."</div>
+</section>
+
+<!-- ──────── SEAL — THE TURNTABLE ──────── -->
+<section class="seal" id="sig">
+  <div class="section-tag reveal">
+    <span>The seal · drop the needle</span>
+    <span class="num">005</span>
+  </div>
+  <h2 class="reveal reveal-d1">Three signatures.<br>One <em>witnessed</em> record.</h2>
+  <p class="seal-p reveal reveal-d2">
+    A record is sealed only when every collaborator co-signs.
+    <em>No silent erasure, no missing credit.</em>
+    Drop the needle. Let it spin.
+  </p>
+
+  <div class="turntable-stage reveal reveal-d3" id="tt-stage" data-hover data-stamp>
+    <div class="tt-base">
+      <div class="tex-paper"></div>
+      <div class="tt-platter-wrap">
+        <div class="tt-vinyl" id="tt-vinyl">
+          <div class="tt-label">
+            <span class="tt-label-em">Untitled</span>
+            <span>Chen / Ito</span>
+            <span style="margin-top:2px">SL-7K2M</span>
+          </div>
+        </div>
+      </div>
+      <div class="tt-arm-wrap">
+        <div class="tt-arm-base"></div>
+        <div class="tt-arm" id="tt-arm"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="seal-hint reveal reveal-d4">click to play</div>
+  <div class="seal-counter reveal reveal-d4">Plays · <strong id="stamp-count">0</strong></div>
+  <div class="seal-imprint" id="seal-imprint">
+    <div class="ok">Verified · 0x4a8f...c721</div>
+    REC · SL-7K2M-9XQ4 · co-signed by 3 of 3
+  </div>
+
+  <svg class="seal-rec" viewBox="0 0 100 150">
+    <use href="#body-d"/><use href="#f-listen-d"/>
+  </svg>
+  <div class="seal-rec-note">— "I love this part."</div>
+</section>
+
+<!-- ──────── WHO IT'S FOR ──────── -->
+<section class="who" id="who">
+  <div class="tex-paper"></div>
+
+  <div class="who-head">
+    <div>
+      <div class="section-tag reveal">
+        <span>Who it's for</span>
+        <span class="num">006</span>
+      </div>
+      <h2 class="reveal reveal-d1">For the people who actually <em>make</em> the music.</h2>
+    </div>
+    <p class="who-sub reveal reveal-d2">
+      Not labels. Not lawyers. The producers, songwriters, topliners, vocalists,
+      and engineers who show up to the room. <em>The hands behind the work.</em>
+    </p>
+  </div>
+
+  <div class="who-grid">
+    <div class="who-card reveal reveal-d2" data-hover>
+      <div class="who-card-head">
+        <span class="who-card-num">i.</span>
+        <span class="who-card-tag">Producers · Beatmakers</span>
+      </div>
+      <h3>The room you built.</h3>
+      <p>For the producers who shape the sound — and want a verifiable trail of every session, every contribution, every co-write.</p>
+      <ul class="who-card-list">
+        <li>Beat tape provenance</li>
+        <li>Session-by-session credits</li>
+        <li>Public producer page</li>
+      </ul>
+    </div>
+    <div class="who-card reveal reveal-d3" data-hover>
+      <div class="who-card-head">
+        <span class="who-card-num">ii.</span>
+        <span class="who-card-tag">Topliners · Songwriters</span>
+      </div>
+      <h3>The hook you wrote.</h3>
+      <p>For the writers whose contributions disappear when songs get re-cut, retitled, or re-credited — keep proof of what you wrote, the moment you wrote it.</p>
+      <ul class="who-card-list">
+        <li>Hook · melody · lyric attribution</li>
+        <li>Voice memo timestamping</li>
+        <li>Writer split locked in</li>
+      </ul>
+    </div>
+    <div class="who-card reveal reveal-d4" data-hover>
+      <div class="who-card-head">
+        <span class="who-card-num">iii.</span>
+        <span class="who-card-tag">Engineers · Vocalists</span>
+      </div>
+      <h3>The hours you put in.</h3>
+      <p>For the mix engineers, recording engineers, session vocalists, and instrumentalists whose names rarely make it to the metadata.</p>
+      <ul class="who-card-list">
+        <li>Engineer & mix credits</li>
+        <li>Featured · uncredited contributions</li>
+        <li>Buildable studio résumé</li>
+      </ul>
+    </div>
+  </div>
+
+  <svg class="who-mascot" viewBox="0 0 100 150">
+    <use href="#body-l"/><use href="#f-wave-l"/>
+  </svg>
+</section>
+
+<!-- ──────── MANIFESTO ──────── -->
+<section class="manifesto">
+  <div class="mf-inner">
+    <div>
+      <div class="mf-tag reveal">Manifesto · vol. 01</div>
+      <h2 class="mf-h reveal reveal-d1">
+        The work was real.<br>
+        The room was real.<br>
+        The people were real.<br>
+        Now the <em>record</em> is too.
+      </h2>
+    </div>
+    <svg class="mf-mascot reveal reveal-d3" viewBox="0 0 100 150">
+      <use href="#body-d"/><use href="#f-ver-d"/>
+    </svg>
+  </div>
+</section>
+
+<!-- ──────── FINAL CTA ──────── -->
+<section class="final">
+  <div class="tex-paper"></div>
+
+  <h2 class="final-h reveal">
+    Make it<br><em>witnessed.</em>
+  </h2>
+  <p class="final-sub reveal reveal-d1">
+    Start a record from your next session.
+    <em>It takes about a minute.</em>
+    Your collaborators don't need to sign up to co-sign.
+  </p>
+  <div class="final-cta-row reveal reveal-d2">
+    <a class="final-cta" data-hover href="#">
+      <span>Start your first record</span>
+      <span class="arr">→</span>
+    </a>
+    <a class="final-cta ghost" data-hover href="#wf">
+      <span>Read the docs</span>
+    </a>
+  </div>
+
+  <svg class="final-mascot" viewBox="0 0 100 150">
+    <use href="#body-l"/><use href="#f-ver-l"/>
+  </svg>
+</section>
+
+<!-- ──────── FOOTER ──────── -->
+<footer class="foot">
+  <div class="foot-col">
+    <div class="foot-brand">Session<em>Ledger</em></div>
+    <p class="foot-quote">"If the work is real, <em>let it be witnessed.</em>"</p>
+    <svg class="foot-vinyl" viewBox="0 0 80 80"><use href="#m-vinyl"/></svg>
+  </div>
+  <div class="foot-col">
+    <h4>Product</h4>
+    <ul>
+      <li><a data-hover>Anatomy</a></li>
+      <li><a data-hover>Workflow</a></li>
+      <li><a data-hover>Records</a></li>
+      <li><a data-hover>Pricing</a></li>
+    </ul>
+  </div>
+  <div class="foot-col">
+    <h4>Resources</h4>
+    <ul>
+      <li><a data-hover>Docs</a></li>
+      <li><a data-hover>FAQ</a></li>
+      <li><a data-hover>Manifesto</a></li>
+      <li><a data-hover>Roadmap</a></li>
+    </ul>
+  </div>
+  <div class="foot-col">
+    <h4>Connect</h4>
+    <ul>
+      <li><a data-hover>Email</a></li>
+      <li><a data-hover>Twitter</a></li>
+      <li><a data-hover>Instagram</a></li>
+      <li><a data-hover>Discord</a></li>
+    </ul>
+  </div>
+  <div class="foot-bot">
+    <span>SessionLedger · vol. 01 · Brooklyn · MMXXVI</span>
+    <span>A registry for music collaborators</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  const isCoarse = window.matchMedia('(pointer: coarse)').matches;
+
+  /* ════════ MASCOT-LED LOADER ════════ */
+  const preMessages = [
+    'tuning the room',
+    'listening for signal',
+    'ready to record'
+  ];
+  const preFaceWraps = [
+    '#f-listen-d',
+    '#f-rec-d',
+    '#f-ver-d'
+  ];
+  const preMsgEl = document.getElementById('pre-msg');
+  const preFaceEl = document.getElementById('pre-face');
+  const dotEls = [
+    document.getElementById('dot-0'),
+    document.getElementById('dot-1'),
+    document.getElementById('dot-2'),
+    document.getElementById('dot-3')
+  ];
+  let preStep = 0;
+  let dotIdx = 0;
+
+  function tickDot() {
+    dotEls.forEach(d => d.classList.remove('on'));
+    dotEls[dotIdx % 4].classList.add('on');
+    dotIdx++;
+  }
+  const dotIv = setInterval(tickDot, 250);
+
+  function tickStep() {
+    if (preStep >= preMessages.length) return;
+    preMsgEl.textContent = preMessages[preStep];
+    preFaceEl.innerHTML = `<use href="${preFaceWraps[preStep]}"/>`;
+    preStep++;
+  }
+  tickStep();
+  setTimeout(tickStep, 800);
+  setTimeout(tickStep, 1600);
+
+  setTimeout(() => {
+    clearInterval(dotIv);
+    document.getElementById('pre').classList.add('gone');
+  }, 2400);
+  setTimeout(() => { const p = document.getElementById('pre'); if (p) p.remove(); }, 3400);
+
+  /* ════════ HERO PARTICLES — SAND THAT SPRINGS BACK ════════ */
+  function initHero() {
+    const canvas = document.getElementById('hero-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let W = 0, H = 0;
+    let particles = [];
+    let mx = -9999, my = -9999;
+    let mvx = 0, mvy = 0;
+    let lastMx = 0, lastMy = 0;
+    let lastMoveTime = 0;
+
+    function setup() {
+      const r = canvas.getBoundingClientRect();
+      W = r.width; H = r.height;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+
+      const off = document.createElement('canvas');
+      off.width = W; off.height = H;
+      const oc = off.getContext('2d');
+
+      const text = 'What you made.';
+      let fs = Math.min(H * 0.42, W * 0.13);
+      oc.font = `italic 350 ${fs}px "Fraunces", serif`;
+      const m = oc.measureText(text);
+      if (m.width > W * 0.86) fs *= (W * 0.86) / m.width;
+      oc.font = `italic 350 ${fs}px "Fraunces", serif`;
+      oc.textBaseline = 'middle';
+      oc.textAlign = 'center';
+      oc.fillStyle = '#fff';
+      oc.fillText(text, W / 2, H / 2);
+
+      const data = oc.getImageData(0, 0, W, H).data;
+      particles = [];
+      const step = 3;
+      for (let y = 0; y < H; y += step) {
+        for (let x = 0; x < W; x += step) {
+          if (data[(y * W + x) * 4 + 3] > 128) {
+            // varied mass — heavier particles spring slower (organic feel)
+            const mass = 0.7 + Math.random() * 0.7;
+            particles.push({
+              tx: x, ty: y,
+              x: W / 2 + (Math.random() - 0.5) * W * 1.6,
+              y: H / 2 + (Math.random() - 0.5) * H * 1.4,
+              vx: 0, vy: 0,
+              size: 0.5 + Math.random() * 1.4,
+              alpha: 0,
+              wob: Math.random() * Math.PI * 2,
+              wobSpd: 0.003 + Math.random() * 0.009,
+              wobAmp: 0.08 + Math.random() * 0.20,
+              mass: mass
+            });
+          }
+        }
+      }
+    }
+    setup();
+
+    const t0 = performance.now() + 1200;
+
+    // Mouse listens to whole page since hero may not catch all events
+    addEventListener('mousemove', e => {
+      // only track when over hero
+      const heroEl = document.getElementById('hero');
+      const hr = heroEl.getBoundingClientRect();
+      if (e.clientY < hr.top || e.clientY > hr.bottom) {
+        mx = -9999; my = -9999;
+        return;
+      }
+      const r = canvas.getBoundingClientRect();
+      const nx = e.clientX - r.left;
+      const ny = e.clientY - r.top;
+      mvx = nx - lastMx;
+      mvy = ny - lastMy;
+      lastMx = nx; lastMy = ny;
+      mx = nx; my = ny;
+      lastMoveTime = performance.now();
+    });
+
+    function draw(now) {
+      ctx.clearRect(0, 0, W, H);
+      const assembled = now > t0;
+      const speed = Math.sqrt(mvx * mvx + mvy * mvy);
+      mvx *= 0.85; mvy *= 0.85;
+
+      const sinceMove = now - lastMoveTime;
+      const mouseActive = sinceMove < 1500 && mx > -1000;
+
+      for (const p of particles) {
+        const dx = p.tx - p.x;
+        const dy = p.ty - p.y;
+        if (assembled) {
+          // Spring back varies with mass — organic settling
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const baseK = 0.008 + Math.min(0.015, dist * 0.00004);
+          const k = baseK / p.mass;
+          p.vx += dx * k;
+          p.vy += dy * k;
+          p.alpha = Math.min(0.92, p.alpha + 0.020);
+        }
+
+        p.wob += p.wobSpd;
+        p.x += Math.sin(p.wob) * p.wobAmp;
+        p.y += Math.cos(p.wob * 0.7) * p.wobAmp * 0.8;
+
+        // mouse force — like a hand pushing sand
+        if (mouseActive) {
+          const mdx = p.x - mx, mdy = p.y - my;
+          const md2 = mdx * mdx + mdy * mdy;
+          const rad = 240;
+          if (md2 < rad * rad && md2 > 1) {
+            const md = Math.sqrt(md2);
+            // Stronger near, falls off smoothly
+            const force = Math.pow(1 - md / rad, 1.5) * (4 + Math.min(speed * 0.35, 8));
+            p.vx += (mdx / md) * force / p.mass;
+            p.vy += (mdy / md) * force / p.mass;
+          }
+        }
+
+        p.vx *= 0.92;
+        p.vy *= 0.92;
+        p.x += p.vx;
+        p.y += p.vy;
+
+        ctx.fillStyle = `rgba(244,239,227,${p.alpha})`;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+
+    let to;
+    addEventListener('resize', () => { clearTimeout(to); to = setTimeout(setup, 200); });
+  }
+
+  function initAmbient() {
+    const canvas = document.getElementById('ambient-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let W = 0, H = 0;
+    let dust = [];
+    function setup() {
+      const r = canvas.getBoundingClientRect();
+      W = r.width; H = r.height;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.scale(dpr, dpr);
+      dust = [];
+      for (let i = 0; i < 220; i++) {
+        dust.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          vx: (Math.random() - 0.5) * 0.10,
+          vy: 0.04 + Math.random() * 0.13,
+          size: 0.4 + Math.random() * 1.2,
+          alpha: 0.06 + Math.random() * 0.30
+        });
+      }
+    }
+    setup();
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      for (const d of dust) {
+        d.x += d.vx;
+        d.y += d.vy;
+        if (d.y > H + 5) { d.y = -5; d.x = Math.random() * W; }
+        if (d.x < -5) d.x = W + 5;
+        if (d.x > W + 5) d.x = -5;
+        ctx.fillStyle = `rgba(244,239,227,${d.alpha})`;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      requestAnimationFrame(draw);
+    }
+    requestAnimationFrame(draw);
+    let to;
+    addEventListener('resize', () => { clearTimeout(to); to = setTimeout(setup, 200); });
+  }
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      setTimeout(initHero, 400);
+      setTimeout(initAmbient, 200);
+    });
+  } else {
+    setTimeout(() => { initHero(); initAmbient(); }, 1000);
+  }
+
+  /* ════════ CURSOR ════════ */
+  let mouseX = innerWidth / 2, mouseY = innerHeight / 2;
+  if (!isCoarse) {
+    const dot = document.querySelector('.cur-dot');
+    let dx = mouseX, dy = mouseY;
+    let lastTrailX = 0, lastTrailY = 0;
+    let trailCount = 0;
+    const NOTES = ['♪', '♫', '♩', '♬'];
+
+    addEventListener('mousemove', e => {
+      mouseX = e.clientX; mouseY = e.clientY;
+      const ddx = e.clientX - lastTrailX, ddy = e.clientY - lastTrailY;
+      const moved = ddx * ddx + ddy * ddy;
+      if (moved > 4500) {
+        lastTrailX = e.clientX;
+        lastTrailY = e.clientY;
+        trailCount++;
+        if (trailCount % 9 === 0) {
+          const note = document.createElement('div');
+          note.className = 'note-trail';
+          note.textContent = NOTES[trailCount % NOTES.length];
+          note.style.left = e.clientX + 'px';
+          note.style.top = e.clientY + 'px';
+          document.body.appendChild(note);
+          setTimeout(() => note.remove(), 1500);
+        }
+      }
+    });
+
+    function tick() {
+      dx += (mouseX - dx) * 0.6; dy += (mouseY - dy) * 0.6;
+      dot.style.transform = `translate(${dx}px,${dy}px) translate(-50%,-50%)`;
+      requestAnimationFrame(tick);
+    }
+    tick();
+
+    document.querySelectorAll('[data-hover]').forEach(el => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('cur-hover'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('cur-hover'));
+    });
+    document.querySelectorAll('[data-stamp]').forEach(el => {
+      el.addEventListener('mouseenter', () => document.body.classList.add('cur-stamp'));
+      el.addEventListener('mouseleave', () => document.body.classList.remove('cur-stamp'));
+    });
+  } else {
+    document.body.style.cursor = 'auto';
+    document.querySelector('.cur-dot').style.display = 'none';
+  }
+
+  /* ════════ NAV BG DETECTION + SCROLL PROGRESS ════════ */
+  const nav = document.getElementById('nav');
+  const lightSections = document.querySelectorAll('.problem, .showcase, .who, .final');
+  const progressEl = document.getElementById('scroll-progress');
+
+  function checkScroll() {
+    let onPaper = false;
+    for (const s of lightSections) {
+      const r = s.getBoundingClientRect();
+      if (r.top < 80 && r.bottom > 80) { onPaper = true; break; }
+    }
+    nav.classList.toggle('on-paper', onPaper);
+    document.body.classList.toggle('on-paper', onPaper);
+
+    const total = document.documentElement.scrollHeight - innerHeight;
+    const p = Math.max(0, Math.min(1, scrollY / total));
+    if (progressEl) progressEl.style.width = (p * 100) + '%';
+  }
+  addEventListener('scroll', checkScroll, { passive: true });
+  checkScroll();
+
+  /* ════════ REVEAL ════════ */
+  const reveals = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.15 });
+  reveals.forEach(el => io.observe(el));
+
+  /* ════════ ANATOMY 3D TILT ════════ */
+  if (!isCoarse) {
+    const card = document.getElementById('an-card');
+    const stage = document.getElementById('an-stage');
+    if (card && stage) {
+      stage.addEventListener('mousemove', e => {
+        const r = stage.getBoundingClientRect();
+        const rx = ((e.clientY - (r.top + r.height / 2)) / r.height) * -10;
+        const ry = ((e.clientX - (r.left + r.width / 2)) / r.width) * 14;
+        card.style.transform = `rotate(${2 + ry * 0.3}deg) rotateX(${rx}deg) rotateY(${ry}deg)`;
+      });
+      stage.addEventListener('mouseleave', () => {
+        card.style.transform = 'rotate(2deg)';
+      });
+    }
+  }
+
+  /* ════════ WORKFLOW HORIZONTAL SCROLL + WAVE ════════ */
+  const wf = document.getElementById('wf');
+  const wfStage = document.getElementById('wf-stage');
+  const wfFill = document.getElementById('wf-fill');
+  const wfPlay = document.getElementById('wf-play');
+  const wfMks = document.querySelectorAll('.wf-mk');
+  const wfStems = document.querySelectorAll('.wf-stem');
+  const wfNow = document.getElementById('wf-now');
+  const wfWave = document.getElementById('wf-wave');
+  const stepLabels = ['capture · 00:00', 'invite · 00:32', 'sign · 01:04', 'confirm · 01:36', 'sealed · 02:30'];
+
+  if (wfWave) {
+    for (let i = 0; i < 80; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'wf-wave-bar';
+      bar.style.height = (8 + Math.random() * 14) + 'px';
+      wfWave.appendChild(bar);
+    }
+    let waveT = 0;
+    function waveTick() {
+      waveT++;
+      const bars = wfWave.querySelectorAll('.wf-wave-bar');
+      bars.forEach((b, i) => {
+        const h = 6 + Math.abs(Math.sin(waveT * 0.05 + i * 0.3)) * 22;
+        b.style.height = h + 'px';
+        b.style.opacity = (0.3 + Math.abs(Math.sin(waveT * 0.04 + i * 0.4)) * 0.5).toFixed(2);
+      });
+      requestAnimationFrame(waveTick);
+    }
+    requestAnimationFrame(waveTick);
+  }
+
+  function updateWf() {
+    if (!wf) return;
+    const r = wf.getBoundingClientRect();
+    const total = wf.offsetHeight - innerHeight;
+    const p = Math.max(0, Math.min(1, -r.top / total));
+    if (wfStage) wfStage.style.transform = `translateX(-${p * 400}vw)`;
+    const playPos = 10 + p * 80;
+    if (wfFill) wfFill.style.width = playPos + '%';
+    if (wfPlay) wfPlay.style.left = playPos + '%';
+    const idx = Math.min(4, Math.floor(p * 5 * 0.999));
+    wfMks.forEach((m, i) => {
+      m.classList.toggle('on', i === idx);
+      m.classList.toggle('passed', i < idx);
+    });
+    wfStems.forEach((s, i) => s.classList.toggle('on', i <= idx));
+    if (wfNow) wfNow.textContent = stepLabels[idx];
+  }
+  addEventListener('scroll', updateWf, { passive: true });
+  updateWf();
+
+  /* ════════ TURNTABLE CEREMONY ════════ */
+  const ttStage = document.getElementById('tt-stage');
+  const ttArm = document.getElementById('tt-arm');
+  const ttVinyl = document.getElementById('tt-vinyl');
+  const stampCount = document.getElementById('stamp-count');
+  const imprint = document.getElementById('seal-imprint');
+  let stamps = 0, busy = false, isPlaying = false;
+
+  if (ttStage) {
+    ttStage.addEventListener('click', e => {
+      if (busy) return;
+      busy = true;
+
+      if (!isPlaying) {
+        ttArm.classList.add('engaged');
+        setTimeout(() => {
+          ttVinyl.classList.add('spinning');
+          isPlaying = true;
+        }, 1100);
+
+        const r = ttStage.getBoundingClientRect();
+        const cx = r.width / 2, cy = r.height / 2;
+        for (let i = 0; i < 8; i++) {
+          const dust = document.createElement('div');
+          dust.className = 'tt-dust';
+          ttStage.appendChild(dust);
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 80 + Math.random() * 40;
+          dust.style.left = cx + Math.cos(angle) * 30 + 'px';
+          dust.style.top = cy + Math.sin(angle) * 30 + 'px';
+          dust.animate([
+            { opacity: 0.8, transform: `translate(0,0) scale(1)` },
+            { opacity: 0, transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) scale(0.2)` }
+          ], { duration: 1400 + Math.random() * 600, easing: 'cubic-bezier(0.16,1,0.3,1)' }).onfinish = () => dust.remove();
+        }
+
+        for (let i = 0; i < 3; i++) {
+          setTimeout(() => {
+            const wave = document.createElement('div');
+            wave.className = 'tt-wave';
+            ttStage.appendChild(wave);
+            wave.animate([
+              { transform: 'translate(-50%,-50%) scale(0.4)', opacity: 0.7 },
+              { transform: 'translate(-50%,-50%) scale(1.6)', opacity: 0 }
+            ], { duration: 1600, easing: 'cubic-bezier(0.16,1,0.3,1)' }).onfinish = () => wave.remove();
+          }, i * 280 + 1200);
+        }
+
+        setTimeout(() => imprint.classList.add('shown'), 1500);
+      } else {
+        const r = ttStage.getBoundingClientRect();
+        const cx = r.width / 2, cy = r.height / 2;
+        for (let i = 0; i < 4; i++) {
+          const dust = document.createElement('div');
+          dust.className = 'tt-dust';
+          ttStage.appendChild(dust);
+          const angle = Math.random() * Math.PI * 2;
+          const dist = 60 + Math.random() * 40;
+          dust.style.left = cx + 'px';
+          dust.style.top = cy + 'px';
+          dust.animate([
+            { opacity: 0.8, transform: `translate(0,0) scale(1)` },
+            { opacity: 0, transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) scale(0.2)` }
+          ], { duration: 1200, easing: 'cubic-bezier(0.16,1,0.3,1)' }).onfinish = () => dust.remove();
+        }
+      }
+
+      stamps++;
+      if (stampCount) stampCount.textContent = stamps;
+
+      setTimeout(() => { busy = false; }, 1600);
+    });
+  }
+})();
+</script>
+
+<script>
+(function () {
+  try {
+    var p = new URLSearchParams(location.search);
+    var cta = p.get('cta');
+    if (cta) {
+      document.querySelectorAll('.start-cta, .cta-link:not(.ghost)').forEach(function (a) {
+        a.setAttribute('href', cta);
+        a.setAttribute('target', '_top');
+      });
+    }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
