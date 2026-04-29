@@ -1920,6 +1920,370 @@ body.cur-stamp .cur-dot {
   .mf-mascot { width: 140px; }
   .foot { grid-template-columns: 1fr 1fr; gap: 40px; }
 }
+
+/* ════════════════ FIELD NOTES (cream) — Ch. 007 ════════════════ */
+.fn {
+  position: relative;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 200px 40px 220px;
+  z-index: 10;
+  overflow: hidden;
+}
+.fn-head {
+  position: relative; z-index: 2;
+  max-width: 1280px;
+  margin: 0 auto 100px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: end;
+}
+.fn-head .section-tag { color: var(--i60); }
+.fn-h {
+  font-family: var(--display);
+  font-size: clamp(56px, 7vw, 110px);
+  line-height: 1.0;
+  letter-spacing: -0.025em;
+  font-weight: 350;
+  color: var(--ink);
+}
+.fn-h em { font-style: italic; }
+.fn-deck {
+  font-size: 16px;
+  line-height: 1.65;
+  color: var(--i80);
+  max-width: 460px;
+}
+.fn-deck em { font-family: var(--display); font-style: italic; color: var(--ink); }
+.fn-block {
+  position: relative; z-index: 2;
+  max-width: 1280px;
+  margin: 0 auto 90px;
+}
+.fn-block:last-of-type { margin-bottom: 0; }
+.fn-divider {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 36px;
+  padding-bottom: 18px;
+  border-bottom: 1.5px solid var(--ink);
+}
+.fn-divider-mark {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 26px;
+  font-weight: 400;
+  color: var(--ink);
+  letter-spacing: -0.01em;
+}
+.fn-divider-h {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.fn-divider-sub {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 16px;
+  color: var(--i60);
+  margin-left: auto;
+}
+.fn-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+}
+.fn-grid.solo { grid-template-columns: 1fr; max-width: 880px; margin: 0 auto; }
+.fn-card {
+  position: relative;
+  background: var(--paper-2);
+  border: 1px solid var(--i12);
+  border-radius: 3px;
+  padding: 36px 36px 30px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.5),
+    0 14px 30px rgba(26,26,28,0.08),
+    0 4px 10px rgba(26,26,28,0.05);
+  transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
+  overflow: hidden;
+}
+.fn-card::before {
+  content: '';
+  position: absolute;
+  left: 22px;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: rgba(232, 181, 168, 0.45);
+  pointer-events: none;
+}
+.fn-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.14  0 0 0 0 0.12  0 0 0 0.30 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.fn-card:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.5),
+    0 22px 44px rgba(26,26,28,0.14),
+    0 6px 14px rgba(26,26,28,0.08);
+}
+.fn-card-quote {
+  position: relative; z-index: 1;
+  margin-left: 22px;
+}
+.fn-card-quote p {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--ink);
+  font-weight: 400;
+  letter-spacing: -0.005em;
+}
+.fn-card-quote.zh p {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.7;
+}
+.fn-card-attr {
+  position: relative; z-index: 1;
+  margin: 22px 0 26px 22px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--i60);
+}
+.fn-card-attr span {
+  color: var(--ink);
+  font-weight: 500;
+}
+.fn-card-note {
+  position: relative; z-index: 1;
+  margin-left: 22px;
+  padding-top: 18px;
+  border-top: 1px dashed var(--i20);
+}
+.fn-note-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--i40);
+  margin-bottom: 10px;
+}
+.fn-card-note p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--i80);
+  font-style: italic;
+}
+.fn-card-note p + p { margin-top: 10px; }
+.fn-card-note p strong {
+  font-style: normal;
+  color: var(--ink);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+.fn-card.tilt-1 { transform: rotate(-0.4deg); }
+.fn-card.tilt-2 { transform: rotate(0.5deg); }
+.fn-card.tilt-3 { transform: rotate(-0.3deg); }
+.fn-card.tilt-1:hover { transform: rotate(0deg) translateY(-4px); }
+.fn-card.tilt-2:hover { transform: rotate(0deg) translateY(-4px); }
+.fn-card.tilt-3:hover { transform: rotate(0deg) translateY(-4px); }
+.fn-feature {
+  position: relative;
+  background: var(--paper-2);
+  border: 1.5px solid var(--ink);
+  border-radius: 3px;
+  padding: 60px 56px 50px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.5),
+    0 30px 60px rgba(26,26,28,0.12),
+    0 10px 20px rgba(26,26,28,0.06);
+  overflow: hidden;
+}
+.fn-feature::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.16  0 0 0 0 0.14  0 0 0 0 0.12  0 0 0 0.30 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.35;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+.fn-feature-pre {
+  position: relative; z-index: 1;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--i60);
+  margin-bottom: 24px;
+  display: flex; align-items: center; gap: 14px;
+}
+.fn-feature-pre::before {
+  content: '';
+  width: 32px; height: 1px;
+  background: var(--ink);
+}
+.fn-feature-quote {
+  position: relative; z-index: 1;
+  font-family: var(--display);
+  font-style: italic;
+  font-size: clamp(24px, 2.4vw, 32px);
+  line-height: 1.4;
+  color: var(--ink);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  max-width: 920px;
+  margin-bottom: 30px;
+}
+.fn-feature-attr {
+  position: relative; z-index: 1;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--i60);
+  margin-bottom: 50px;
+}
+.fn-feature-attr span {
+  color: var(--ink);
+  font-weight: 500;
+}
+.fn-feature-response {
+  position: relative; z-index: 1;
+  border-top: 1.5px solid var(--ink);
+  padding-top: 36px;
+}
+.fn-feature-response > .fn-note-label {
+  margin-bottom: 22px;
+  font-size: 10px;
+}
+.fn-feature-intro {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink);
+  margin-bottom: 32px;
+  max-width: 700px;
+}
+.fn-feature-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+  margin-bottom: 30px;
+}
+.fn-feature-item {
+  border-top: 1px dashed var(--i20);
+  padding-top: 18px;
+}
+.fn-feature-item-h {
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--i40);
+  margin-bottom: 12px;
+}
+.fn-feature-item-h em {
+  color: var(--ink);
+  font-style: normal;
+  font-weight: 500;
+}
+.fn-feature-item-p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--i80);
+}
+.fn-feature-item-p strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+.fn-feature-coda {
+  font-family: var(--hand);
+  font-size: 22px;
+  line-height: 1.4;
+  color: var(--ink);
+  border-top: 1px dashed var(--i20);
+  padding-top: 24px;
+  max-width: 700px;
+}
+.fn-closing {
+  position: relative; z-index: 2;
+  max-width: 880px;
+  margin: 100px auto 0;
+  text-align: center;
+  padding: 50px 40px;
+  border-top: 1.5px solid var(--ink);
+  border-bottom: 1.5px solid var(--ink);
+}
+.fn-closing-h {
+  font-family: var(--display);
+  font-style: italic;
+  font-size: 28px;
+  line-height: 1.3;
+  font-weight: 400;
+  color: var(--ink);
+  margin-bottom: 14px;
+}
+.fn-closing-p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--i80);
+  max-width: 480px;
+  margin: 0 auto;
+}
+.fn-closing-p a {
+  color: var(--ink);
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 1px;
+  transition: opacity 0.3s;
+}
+.fn-closing-p a:hover { opacity: 0.6; }
+.fn-mascot {
+  position: absolute;
+  bottom: 80px; left: 60px;
+  width: 64px; height: 90px;
+  z-index: 3;
+  animation: floaty 6s ease-in-out infinite;
+  transform: rotate(-3deg);
+}
+.fn-mascot-note {
+  position: absolute;
+  bottom: 96px; left: 140px;
+  font-family: var(--hand);
+  font-size: 22px;
+  color: var(--ink);
+  z-index: 3;
+  max-width: 220px;
+  line-height: 1.2;
+}
+@media (max-width: 980px) {
+  .fn { padding: 120px 24px; }
+  .fn-head { grid-template-columns: 1fr; gap: 30px; }
+  .fn-grid { grid-template-columns: 1fr; gap: 24px; }
+  .fn-feature { padding: 40px 28px; }
+  .fn-feature-list { grid-template-columns: 1fr; gap: 20px; }
+  .fn-divider { flex-wrap: wrap; }
+  .fn-divider-sub { margin-left: 0; width: 100%; }
+  .fn-card { transform: rotate(0) !important; }
+  .fn-mascot, .fn-mascot-note { display: none; }
+}
+
 </style>
 </head>
 <body>
@@ -2870,6 +3234,160 @@ body.cur-stamp .cur-dot {
   <svg class="who-mascot" viewBox="0 0 100 150">
     <use href="#body-l"/><use href="#f-wave-l"/>
   </svg>
+</section>
+
+
+<!-- ──────── FIELD NOTES (Ch. 007) ──────── -->
+<section class="fn" id="field-notes">
+  <div class="tex-paper"></div>
+  <div class="fn-head">
+    <div>
+      <div class="section-tag reveal">
+        <span>Field notes</span>
+        <span class="num">007</span>
+      </div>
+      <h2 class="fn-h reveal reveal-d1">
+        The first <em>listeners.</em>
+      </h2>
+    </div>
+    <p class="fn-deck reveal reveal-d2">
+      Notes that came back from the first sessions out in the world. <em>What they heard. What we kept. What changed.</em>
+    </p>
+  </div>
+  <!-- Heard, kept -->
+  <div class="fn-block">
+    <div class="fn-divider reveal">
+      <span class="fn-divider-mark">i.</span>
+      <span class="fn-divider-h">Heard, kept</span>
+      <span class="fn-divider-sub">— what landed</span>
+    </div>
+    <div class="fn-grid">
+      <div class="fn-card tilt-1 reveal reveal-d2">
+        <div class="fn-card-quote">
+          <p>"I'd definitely use this. I've had the credit-confusion problem myself — I usually figure it out over Discord and Instagram DMs, but having something more organized would help. The AI era needs more products that actually serve artists — independent tools that <strong>care</strong> about the people making the work, not ones that consume them."</p>
+        </div>
+        <div class="fn-card-attr">— a <span>producer</span></div>
+        <div class="fn-card-note">
+          <span class="fn-note-label">— note from the room</span>
+          <p>This is the voice we built for. The <strong>"Discord and Instagram DMs"</strong> line is exactly the gap SessionLedger is closing — the work happens in places, the record never gets made.</p>
+        </div>
+      </div>
+      <div class="fn-card tilt-2 reveal reveal-d3">
+        <div class="fn-card-quote">
+          <p>"The idea is original and useful. The virtual character is cute and gives the app personality."</p>
+        </div>
+        <div class="fn-card-attr">— a <span>composer</span></div>
+        <div class="fn-card-note">
+          <span class="fn-note-label">— note from the room</span>
+          <p>REC stays. The character isn't decoration — it's the registry's voice. <strong>A ledger that feels human is a ledger people will actually use.</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Heard, changing -->
+  <div class="fn-block">
+    <div class="fn-divider reveal">
+      <span class="fn-divider-mark">ii.</span>
+      <span class="fn-divider-h">Heard, changing</span>
+      <span class="fn-divider-sub">— what's getting cut</span>
+    </div>
+    <div class="fn-grid">
+      <div class="fn-card tilt-2 reveal reveal-d2">
+        <div class="fn-card-quote">
+          <p>"There are too many paragraphs that don't feel essential. The main purpose isn't easy to identify quickly. The colors and typography feel a little too busy at times — it pulls focus from the app itself."</p>
+        </div>
+        <div class="fn-card-attr">— a <span>composer</span></div>
+      </div>
+      <div class="fn-card tilt-1 reveal reveal-d3">
+        <div class="fn-card-quote zh">
+          <p>"I get the gist, but I can't tell at a glance what it does. The text is dense, and the alternating black-and-white pages plus all the words made it hard to find the focal point."</p>
+        </div>
+        <div class="fn-card-attr">— a <span>flutist · fine arts student</span></div>
+      </div>
+    </div>
+    <div class="fn-card reveal reveal-d4" style="margin-top: 24px; transform: none;">
+      <div class="fn-card-note" style="margin-left: 22px; border-top: none; padding-top: 0;">
+        <span class="fn-note-label">— note from the room</span>
+        <p>Two listeners, same note — and they're right. Our instinct was to <strong>over-explain</strong>, to prove every choice. The next pass strips the page down: <strong>one idea per sentence, fewer voices on screen at once</strong>, the registry doing the talking instead of us.</p>
+        <p>We're keeping the polaroid, the turntable, REC. Cutting half the words around them.</p>
+      </div>
+    </div>
+  </div>
+  <!-- Heard, hardest — featured -->
+  <div class="fn-block">
+    <div class="fn-divider reveal">
+      <span class="fn-divider-mark">iii.</span>
+      <span class="fn-divider-h">Heard, hardest</span>
+      <span class="fn-divider-sub">— the question we can't dodge</span>
+    </div>
+    <div class="fn-feature reveal reveal-d2">
+      <div class="fn-feature-pre">The most honest thing we've heard</div>
+      <div class="fn-feature-quote">
+        "I'd genuinely want to try it. But honestly? I'm not sure I'd keep using it. I have ADHD — I might forget, or get lazy. My current workflow already works fine. And if I'm being real — even if I wanted to use it, I'd have to get all my collaborators on board too. That part feels hard."
+      </div>
+      <div class="fn-feature-attr">— a <span>songwriter</span></div>
+      <div class="fn-feature-response">
+        <span class="fn-note-label">— note from the room</span>
+        <p class="fn-feature-intro">Three problems, one answer. This is the part we think about every day.</p>
+        <div class="fn-feature-list">
+          <div class="fn-feature-item">
+            <div class="fn-feature-item-h">on <em>"I'll forget."</em></div>
+            <p class="fn-feature-item-p">A record takes about <strong>a minute</strong> to start, from your phone, while the session is still happening. If we make it any longer than that, we lose. We're optimizing for that minute.</p>
+          </div>
+          <div class="fn-feature-item">
+            <div class="fn-feature-item-h">on <em>"my workflow already works."</em></div>
+            <p class="fn-feature-item-p">For some sessions, it does. For the ones where credit gets contested six months later, it doesn't. SessionLedger isn't replacing your workflow — <strong>it's the receipt for the sessions that matter most.</strong></p>
+          </div>
+          <div class="fn-feature-item">
+            <div class="fn-feature-item-h">on <em>"I'd have to get everyone on board."</em></div>
+            <p class="fn-feature-item-p">This is the one we built around hardest. <strong>Collaborators don't need accounts.</strong> A link, one tap to confirm what they did, that's it. No signup, no app, no friction. It's the only way a tool like this can work.</p>
+          </div>
+        </div>
+        <p class="fn-feature-coda">— if you read this, we'd love a second look once the next version ships.</p>
+      </div>
+    </div>
+  </div>
+  <!-- Heard, still thinking -->
+  <div class="fn-block">
+    <div class="fn-divider reveal">
+      <span class="fn-divider-mark">iv.</span>
+      <span class="fn-divider-h">Heard, still thinking</span>
+      <span class="fn-divider-sub">— questions we're sitting with</span>
+    </div>
+    <div class="fn-grid">
+      <div class="fn-card tilt-3 reveal reveal-d2">
+        <div class="fn-card-quote">
+          <p>"I had a vague sense it's about music rights and splits. But I thought copyright had to go through each country's official agency — you can do this yourself? I'm not sure I need it, but the visuals made me want to stay and look."</p>
+        </div>
+        <div class="fn-card-attr">— a <span>listener outside the field</span></div>
+        <div class="fn-card-note">
+          <span class="fn-note-label">— note from the room</span>
+          <p>The most useful confusion we've heard. SessionLedger isn't <strong>copyright registration</strong> — it's <strong>provenance.</strong> A record of who showed up, what they did, witnessed by everyone in the room. That's a different thing from legal copyright, and we haven't made the difference clear enough on the page. Working on it.</p>
+        </div>
+      </div>
+      <div class="fn-card tilt-1 reveal reveal-d3">
+        <div class="fn-card-quote">
+          <p>"What's blockchain?"</p>
+        </div>
+        <div class="fn-card-attr">— a <span>producer</span> <em style="font-style:italic;text-transform:none;letter-spacing:0.04em">(asked mid-conversation)</em></div>
+        <div class="fn-card-note">
+          <span class="fn-note-label">— note from the room</span>
+          <p>We use the word <strong>"blockchain-timestamped"</strong> on the page. After we explained it in plain language — <em>"the record can't be edited or erased later, not even by us"</em> — they got it instantly and called it <strong>"actually really interesting."</strong> So the concept lands. The word doesn't. We're rewriting.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Closing -->
+  <div class="fn-closing reveal">
+    <div class="fn-closing-h">Still listening.</div>
+    <p class="fn-closing-p">
+      Field notes grow with each session heard from. If you've used SessionLedger and want to leave one, <a href="#">drop it here</a>.
+    </p>
+  </div>
+  <svg class="fn-mascot" viewBox="0 0 100 150">
+    <use href="#body-l"/><use href="#f-listen-d"/>
+  </svg>
+  <div class="fn-mascot-note">— "still listening to<br>the room."</div>
 </section>
 
 <!-- ──────── MANIFESTO ──────── -->
